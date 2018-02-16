@@ -22,6 +22,7 @@
       }
 	</style>
 	<script>
+    // PROGRAMMED BY Joel Petritsch AND Stephen Callen
 	// An IIFE ("Iffy") - see the notes in mycourses
 	(function(){
 		"use strict";
@@ -40,6 +41,91 @@
         var bassFilter;
         var trebleFilter;
         
+        var lastTime = 0; //used by calculateDeltaTime
+        var dt;
+        
+        //used for drawing the stars and the guns
+        var allStars = [];
+        var currentStarSpeed;
+        var allGuns = [];
+        
+        function Gun(x,y){
+            this.x = x;
+            this.y = y;
+            this.rotation = 0;
+            this.lasers = [];
+            this.fireTimer = 0;
+        }
+        
+        function Bolt(x,y,rotation){
+            this.x = x;
+            this.y = y;
+            this.rotation = rotation;
+            this.speed = 20;
+            this.length = 10;
+            this.width = 4;
+            
+        }
+        
+        //draws a gun
+        Gun.prototype.draw = function(ctx){
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.fillStyle = '#aaa';
+            ctx.fillRect(40, -25, 60, 10);
+            ctx.fillRect(40, 15, 60, 10);
+            ctx.fillStyle = '#444';
+            ctx.fillRect(-20, -40, 60, 80);
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, 0, Math.PI*2, false);
+            ctx.fill();
+            ctx.stroke();
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 5, 0, Math.PI*2, false);
+            ctx.stroke();
+            ctx.restore();
+        };
+        
+        //updates the gun and it's lasers
+        Gun.prototype.update = function(){
+            this.rotation += 0.2 * dt;
+            
+            this.fireTimer += dt;
+            if(this.fireTimer >= 0.5){
+                this.fire(ctx);
+                this.fireTimer = 0;
+            }
+            
+            //updates all current bolts
+            for(var i = 0; i< this.lasers.length; i++){
+                var bolt = this.lasers[i];
+                bolt.x += bolt.speed;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(bolt.rotation);
+                ctx.fillStyle = "#0f0";
+                ctx.fillRect(bolt.x, bolt.y, bolt.length, bolt.width);
+                ctx.fillRect(bolt.x, bolt.y + 44, bolt.length, bolt.width);
+                ctx.restore();    
+            }
+        };
+        
+        //used to shoot lasers from a gun
+        Gun.prototype.fire = function(ctx){
+            //first num = the length of the barrel rect + the width of the main rect - the x offset of the main rect of the cannon
+            //second num = y loc of top barrel + 1/2 width of barrel - 1/2 width of bolt
+            var bolt = new Bolt(80, -22, this.rotation);
+            this.lasers.push(bolt);
+            
+            if(this.lasers.length >= 10){
+                this.lasers.shift();
+            }
+        };
+        
         
 		function init(){
 			// set up canvas stuff
@@ -57,7 +143,17 @@
 			
 			// load and play default sound into audio element
 			playStream(audioElement,SOUND_1);
-			
+            
+            //sets up guns
+			for(var i=1; i <= 4; i++) { allGuns.push(new Gun(i*100, i * 100)); }
+            
+            //sets up initial stars
+            currentStarSpeed = 10;
+            
+            for(var i = 0; i < 100; i++){
+                makeStar(currentStarSpeed);
+            }
+            
 			// start animation loop
 			update();
 		}
@@ -130,6 +226,10 @@
                  delayAmount = e.target.value;
                  console.log(delayAmount);
 			 };
+            //the star speed range selector
+             document.querySelector('#starSpeed').onchange = function(e){
+                 currentStarSpeed = e.target.value;
+             };
             document.getElementById("boostCheck").onchange = function(e){	
                  if( e.target.checked){
 				 	doBoost=true;                     
@@ -184,6 +284,8 @@
 		function update() { 
 			// this schedules a call to the update() method in 1/60 seconds
 			requestAnimationFrame(update);
+            
+            dt = calculateDeltaTime();
 			
 			/*
 				Nyquist Theorem
@@ -203,7 +305,7 @@
 			//analyserNode.getByteTimeDomainData(data); // waveform data
 			
 			// DRAW!
-			ctx.clearRect(0,0,800,600);  
+			ctx.clearRect(0,0,canvas.width,canvas.height);  
 			var barWidth = 4;
 			var barSpacing = 1;
 			var barHeight = 100;
@@ -255,9 +357,58 @@
                 ctx.closePath();
                 ctx.stroke();
 			}
+            
+            //updates and draws all stars
+            for(var i = 0; i < allStars.length; i++){
+                allStars[i].update();
+                allStars[i].draw();
+            }
+            //updates and draws all guns
+            for(var i=0; i<allGuns.length; i++){
+                allGuns[i].update();
+                allGuns[i].draw(ctx);
+            }
+            //determines if stars should respawn on the right of the screen
+            respawnStar();
+            
             manipulatePixels();
 			 
-		} 
+		}
+        
+        //makes a star with a speed equal to between 0.8 and 5 times the input speed
+        function makeStar(speed){
+            var s = {};
+            
+            s.x = canvas.width + 10;
+            s.y = getRandomInt(0, canvas.height);
+            
+            s.r = getRandomInt(0.5, 2);
+            s.speed = getRandomInt(0.8 * speed, 5 * speed);
+            s.update = function(){
+                this.x -= this.speed;
+            };
+            s.draw = function(){
+                ctx.save();
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI*2, false);
+                ctx.fill();
+                ctx.restore();
+            };
+            
+            Object.seal(s);
+            allStars.push(s);
+        }
+        
+        //will respawn a new star in a new spot on the right of the screen when one hits the left
+        function respawnStar(){
+            for(var i=0; i < allStars.length; i++){
+                if(allStars[i].x < 0){
+                    allStars.splice(i, 1);
+                    makeStar(currentStarSpeed);
+                }
+            }
+        }
         
         function manipulatePixels(){
             var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
@@ -300,10 +451,27 @@
             
         }
 		
-		// HELPER
+		// HELPERS
 		function makeColor(red, green, blue, alpha){
    			var color='rgba('+red+','+green+','+blue+', '+alpha+')';
    			return color;
+		}
+        
+        function calculateDeltaTime(){
+            var now,fps;
+            now = performance.now(); 
+            fps = 1000 / (now - lastTime);
+            fps = clamp(fps, 12, 60);
+            lastTime = now; 
+            return 1/fps;
+	    }
+        
+        function clamp(val, min, max){
+	        return Math.max(min, Math.min(max, val));
+        }
+        
+        function getRandomInt(min, max) {
+  			return Math.floor(Math.random() * (max - min)) + min;
 		}
 		
 		 // FULL SCREEN MODE
@@ -327,7 +495,7 @@
 	</script>
 </head>
 <body>
-	<canvas id="canvas" width="640" height="400"></canvas>
+	<canvas id="canvas" width="1024" height="768"></canvas>
 	<div id="controls">
 		<audio controls loop></audio>
 		<label>Track: 
@@ -349,6 +517,12 @@
                 <label>
                     Delay/Reverb
                     <input id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1">
+                </label>               
+            </p>
+            <p>
+                <label>
+                    Star Speed
+                    <input id="starSpeed" type="range" min="1" max="10" step ="0.1">
                 </label>               
             </p>
 	   </div>      
