@@ -74,10 +74,10 @@
             bassFilter.type = "lowshelf";
             bassFilter.frequency.vale = 200;
             if(doBoost){
-            bassFilter.gain.value=30;
+            bassFilter.gain.value=40;
             }
             else{
-                bassFilter.gain.value =30;
+                bassFilter.gain.value =0;
             }
             trebleFilter = audioCtx.createBiquadFilter();
             trebleFilter.type = "highshelf";
@@ -132,10 +132,12 @@
 			 };
             document.getElementById("boostCheck").onchange = function(e){	
                  if( e.target.checked){
-				 	doBoost=true;
-				}
+				 	doBoost=true;                     
+                bassFilter.gain.value=40;          
+                }				
                 else{
                     doBoost= false;
+                     bassFilter.gain.value =0; 
                 }		
 			 };
             document.getElementById('RedCheck').onchange = function(e){
