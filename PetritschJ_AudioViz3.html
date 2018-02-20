@@ -48,6 +48,7 @@
         var allStars = [];
         var currentStarSpeed;
         var allGuns = [];
+        var percentages = []; //will store how intense each of the chunks of audio data is
         
         function Gun(x,y){
             this.x = x;
@@ -55,13 +56,14 @@
             this.rotation = 0;
             this.lasers = [];
             this.fireTimer = 0;
+            this.direction = 1;
         }
         
         function Bolt(x,y,rotation){
             this.x = x;
             this.y = y;
             this.rotation = rotation;
-            this.speed = 20;
+            this.speed = 15;
             this.length = 10;
             this.width = 4;
             
@@ -91,25 +93,29 @@
         };
         
         //updates the gun and it's lasers
-        Gun.prototype.update = function(){
-            this.rotation += 0.2 * dt;
+        Gun.prototype.update = function(index){
             
             this.fireTimer += dt;
-            if(this.fireTimer >= 0.5){
-                this.fire(ctx);
-                this.fireTimer = 0;
+            
+            //this 0.15 is the threshhold percentage that the chunks of audio data must reach to fire bolts
+            if(percentages[index] > .15){
+                if(this.fireTimer >= 0.02){
+                    this.fire(ctx);
+                    this.fireTimer = 0;
+                }
             }
             
             //updates all current bolts
             for(var i = 0; i< this.lasers.length; i++){
                 var bolt = this.lasers[i];
                 bolt.x += bolt.speed;
+                //draws two rects, one for each barrel. Both of these count as one bolt
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(bolt.rotation);
                 ctx.fillStyle = "#0f0";
                 ctx.fillRect(bolt.x, bolt.y, bolt.length, bolt.width);
-                ctx.fillRect(bolt.x, bolt.y + 44, bolt.length, bolt.width);
+                ctx.fillRect(bolt.x, bolt.y + 40, bolt.length, bolt.width);
                 ctx.restore();    
             }
         };
@@ -121,7 +127,7 @@
             var bolt = new Bolt(80, -22, this.rotation);
             this.lasers.push(bolt);
             
-            if(this.lasers.length >= 10){
+            if(this.lasers.length >= 100){
                 this.lasers.shift();
             }
         };
@@ -201,8 +207,6 @@
             bassFilter.connect(trebleFilter);
             trebleFilter.connect(delayNode);
             delayNode.connect(analyserNode);
-            
-            
 			
 			// here we connect to the destination i.e. speakers
 			analyserNode.connect(audioCtx.destination);
@@ -312,8 +316,13 @@
 			var topSpacing = 50;            
             var lastY = window.innerHeight/2;
             var lastX =0;
+            
+            var totals = [];
+            for(var i = 0; i < allGuns.length; i++){
+                    totals.push(0);
+            }
 			
-			// loop through the data and draw!
+			// loop through the data and separate them into each specific gun
 			for(var i=0; i<data.length; i++) { 
 				ctx.fillStyle = 'rgba(0,255,0,0.6)'; 
 				
@@ -323,6 +332,8 @@
 				//ctx.fillRect(i * (barWidth + barSpacing),topSpacing + 256-data[i],barWidth,barHeight); 
 				//ctx.fillRect(640-i*(barWidth+barSpacing),topSpacing+256-data[i]-20,barWidth,barHeight);
                 //red-ish circles 
+                
+                /* Old Code, used to draw circles
                 var percent=data[i]/255;
                
                 var circleRadius=percent*maxRadius;
@@ -345,7 +356,32 @@
                 ctx.fill();
                 ctx.closePath();
                 ctx.restore();
+                */
+                
+                //this code splits up all data into a number of chunks equal to the number of guns
+                //4 is used because this is the number of guns. If num of guns is changed this must also be changed
+                if(i < data.length/4){
+                    totals[0] += data[i];
+                }else if (i < 2 * data.length/4){
+                    totals[1] += data[i];
+                }else if (i < 3 * data.length/4){
+                    totals[2] += data[i];
+                }else if (i < data.length){
+                    totals[3] += data[i];
+                }  
+                
             }
+            
+            percentages = []; //resets the percentages array
+            var intensity = 2; //since the percentages of each chunk are kind of low (< 25%), use this var to boost the movement of each gun
+            
+            //averages within all chunks so that each chunk's number is between 0 and 255 
+            for(var i = 0; i < allGuns.length; i++){
+                totals[i] /= (255/allGuns.length);
+                percentages.push(totals[i] / 256 * intensity);
+            }
+            
+            /* old code, draws a squiggle
             for(var i=0; i<data.length; i++) { 
                 ctx.strokeStyle="green";                
                 ctx.lineWidth= 4;
@@ -357,6 +393,7 @@
                 ctx.closePath();
                 ctx.stroke();
 			}
+            */
             
             //updates and draws all stars
             for(var i = 0; i < allStars.length; i++){
@@ -365,7 +402,8 @@
             }
             //updates and draws all guns
             for(var i=0; i<allGuns.length; i++){
-                allGuns[i].update();
+                allGuns[i].update(i);
+                allGuns[i].rotation = Math.PI / -2 * percentages[i];
                 allGuns[i].draw(ctx);
             }
             //determines if stars should respawn on the right of the screen
