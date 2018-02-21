@@ -177,6 +177,8 @@
         var bassFilter;
         var trebleFilter;
         var doRotate = true;
+        var weaponType =0;
+        var rechargeRate =0.02;
         
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
@@ -236,7 +238,7 @@
             
             //this 0.05 is the threshhold percentage that the chunks of audio data must reach to fire bolts
             if(percentages[index] > .05){
-                if(this.fireTimer >= 0.02){
+                if(this.fireTimer >= rechargeRate){
                     this.fire(ctx, percentages[index]);
                     this.fireTimer = 0;
                 }
@@ -252,31 +254,71 @@
                 ctx.rotate(bolt.rotation);
                 if(percentages[index] > .29){
                     ctx.fillStyle = "#f00" ;
+                    ctx.strokeStyle = "#f00" ;
+                    ctx.lineWidth=15;
                 }
                 else if(percentages[index] > .25){
                     ctx.fillStyle = "#d20" ;
+                    ctx.strokeStyle = "#d20" ;  
+                    ctx.lineWidth=17;
                 }
                  else if(percentages[index] > .21){
                     ctx.fillStyle = "#a40" ;
+                    ctx.strokeStyle = "#a40" ;
+                    ctx.lineWidth=19;
                 }
                  else if(percentages[index] > .17){
                     ctx.fillStyle = "#960" ;
+                    ctx.strokeStyle = "#960" ;
+                    ctx.lineWidth=21;
                 }
                  else if(percentages[index] > .13){
                     ctx.fillStyle = "#690" ;
+                    ctx.strokeStyle = "#690" ;
+                    ctx.lineWidth=23;
                 }
                  else if(percentages[index] > .11){
                     ctx.fillStyle = "#4a0" ;
+                    ctx.strokeStyle = "#4a0" ;
+                    ctx.lineWidth=25;
                 }
                  else{
                     ctx.fillStyle = "#2d0" ;
+                    ctx.strokeStyle = "#2d0" ;
+                    ctx.lineWidth=27;
                 }
                 
+                if(weaponType ==0){                    
                 ctx.fillRect(bolt.x, bolt.y - maxRadius/2, bolt.length, bolt.width);
                 ctx.fillRect(bolt.x, bolt.y + 48-maxRadius/2, bolt.length, bolt.width);
                 ctx.restore();    
+                }
+                else if(weaponType == 1){  
+                    ctx.beginPath(); 
+                    ctx.moveTo(bolt.x -56, bolt.y+24);
+                    ctx.lineTo( bolt.x +500, bolt.y+24);                
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                else if(weaponType == 2){  
+                    ctx.beginPath(); 
+                    ctx.arc(bolt.x-24, bolt.y+24, maxRadius, 0, Math.PI*2); 
+                    ctx.closePath();
+                    ctx.fill();                        
+                    ctx.restore();
+                    
+                }
+                else if(weaponType == 3) {  
+                    ctx.beginPath(); 
+                    ctx.arc(bolt.x-24, bolt.y+24, maxRadius, 0, Math.PI*2); 
+                    ctx.closePath();
+                    ctx.fill();                        
+                    ctx.restore();
+                }
+        
+                
             }
-        };
+        }
         
         //used to shoot lasers from a gun
         Gun.prototype.fire = function(ctx){
@@ -356,8 +398,7 @@
 			
 			// this is where we hook up the <audio> element to the analyserNode
 			sourceNode = audioCtx.createMediaElementSource(audioElement); 
-			//sourceNode.connect(analyserNode);
-            //Source node goes straight to speakers, unaltered.
+			            //Source node goes straight to speakers, unaltered.
             sourceNode.connect(audioCtx.destination);
             
             //channel will play and visualize the delay
@@ -375,12 +416,23 @@
 			document.querySelector("#trackSelect").onchange = function(e){
 				playStream(audioElement,e.target.value);
 			};
+            document.querySelector("#weaponSelect").onchange = function(e){
+				weaponType = e.target.value;
+                if(weaponType == 2){
+                    rechargeRate =.5;     
+                    maxRadius=10;
+
+                    
+                }
+                else{
+                    rechargeRate =.02;
+                }
+			};
 			
 			document.querySelector("#fsButton").onclick = function(){
 				requestFullscreen(canvas);
 			};
-             document.querySelector("#slider1").onchange = function(e){			 	
-			 	 document.querySelector("#sliderResults").innerHTML = e.target.value;
+             document.querySelector("#slider1").onchange = function(e){	
                  maxRadius = e.target.value;
                  console.log(maxRadius);                 
 			 };
@@ -489,37 +541,9 @@
 			for(var i=0; i<data.length; i++) { 
 				ctx.fillStyle = 'rgba(0,255,0,0.6)'; 
 				
-				// the higher the amplitude of the sample (bin) the taller the bar
-				// remember we have to draw our bars left-to-right and top-down
-             
-				//ctx.fillRect(i * (barWidth + barSpacing),topSpacing + 256-data[i],barWidth,barHeight); 
-				//ctx.fillRect(640-i*(barWidth+barSpacing),topSpacing+256-data[i]-20,barWidth,barHeight);
-                //red-ish circles 
+				
                 
-                /* Old Code, used to draw circles
-                var percent=data[i]/255;
                
-                var circleRadius=percent*maxRadius;
-                ctx.beginPath();
-                ctx.fillStyle=makeColor(255,111,111,.34-percent/3.0);
-                ctx.arc(canvas.width/2,canvas.height/2,circleRadius,0,2*Math.PI,false);
-                ctx.fill();
-                ctx.closePath();
-                //blue-ish circles, bigger,more transparent
-                ctx.beginPath();
-                ctx.fillStyle=makeColor(0,0,255,.10-percent/10.0);
-                ctx.arc(canvas.width/2,canvas.height/2,circleRadius*1.5,0,2*Math.PI,false);
-                ctx.fill();
-                ctx.closePath();
-                //yellow-ishcircles,smaller 
-                ctx.save();
-                ctx.beginPath();
-                ctx.fillStyle=makeColor(200,200,0,.5-percent/5.0);
-                ctx.arc(canvas.width/2,canvas.height/2,circleRadius*.50,0,2*Math.PI,false);
-                ctx.fill();
-                ctx.closePath();
-                ctx.restore();
-                */
                 
                 //this code splits up all data into a number of chunks equal to the number of guns
                 //6 is used because this is the number of guns. If num of guns is changed this must also be changed
@@ -720,30 +744,20 @@
 
 			</select>
 		</label><br/>
+        <label>Engagement Type
+            <select id="weaponSelect" >
+                <option value=0>Auto Cannons</option>
+				<option value=1>Superheated Acid Throwers</option>
+				<option value=2>Torpedos</option>
+                <option value=3>Diplomacy, Hail their Ship</option> 
+            </select>
+		</label><br/>
             
 		<p id="status">???</p>
             </div>
         <hr>
 		<button id="fsButton">Go Full Screen</button><br>
-        <!--
-        <div>
-		          <label for="slider1">Radius</label>
-		          <input id="slider1" type ="range" min ="2" max="20.0" step ="1" value ="0"/>
-		          <span style="float:right" id="sliderResults">???</span>
-            <p>
-                <label>
-                    Delay/Reverb
-                    <input id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1" value="0">
-                </label>               
-            </p>
-            <p>
-                <label>
-                    Star Speed
-                    <input id="starSpeed" type="range" min="1" max="10" step ="0.1">
-                </label>               
-            </p>
-	   </div> 
-        -->
+
         <div class="left">
             <label for="slider1">Radius</label> <br/>
             <label for="delaySlider">Delay/Reverb</label> <br/>
@@ -769,21 +783,6 @@
 			<input type="checkbox" class="checkmark" id="LineCheck"><br/>
 			<input type="checkbox" class="checkmark" id="boostCheck">
         </div>
-        <!--
-        <div>
-		<span>
-			<label for="myCheckbox">Enable Gun Aiming!</label>
-			<input type="checkbox" id="RotateCheck" ><br>
-            <label for="myCheckbox">Jammed Communications!</label>
-			<input type="checkbox" id="NoiseCheck"><br>
-            <label for="myCheckbox">UV Cameras</label>
-			<input type="checkbox" id="InvertCheck"><br>
-            <label for="myCheckbox">Lines</label>
-			<input type="checkbox" id="LineCheck"><br>
-            <label for="myCheckbox">Bass Booster</label>
-			<input type="checkbox" id="boostCheck">
-		</span>
-	</div>
-        -->
+        
 </body>
 </html>
