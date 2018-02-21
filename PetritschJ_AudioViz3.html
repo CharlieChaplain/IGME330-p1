@@ -98,11 +98,34 @@
             cursor: pointer;
         }
         .checkmark{
+            /*
             background-color: #eef;
             border-radius: none;
+            box-shadow: none;
+            border: none;
             width: 23px;
             height: 23px;
-            
+            */
+            -webkit-appearance: none;
+            background-color: #eef;
+            padding: 9px;
+            display: inline-block;
+            position: relative;
+        }
+        .checkmark:active, checkmark:checked:active{
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px 1px 3px rgba(0,0,0,0.1);
+        }
+        .checkmark:checked{
+            background-color: #0ad168;
+            color: #fff;
+        }
+        
+        .checkmark:checked:after {
+            font-size: 14px;
+            position: absolute;
+            top: 0px;
+            left: 3px;
+            color: #fff;
         }
         
       #controls{
@@ -690,8 +713,9 @@
 			<select id="trackSelect" >
                 <option value="media/The Picard Song.mp3">The Picard Song</option>
 				<option value="media/Imperial.mp3">Imperial</option>
-				<option value="media/Peanuts Theme.mp3">Peanuts Theme</option>
+				<option value="media/Avast your Ass - Kitsune 2.mp3">Avast your Ass</option>
                 <option value="media/07 Touch (feat. Paul Williams).mp3">Touch</option>
+                <option value="media/Potential for Anything.mp3">Potential for Anything</option>
                           
 
 			</select>
