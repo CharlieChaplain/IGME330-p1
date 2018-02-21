@@ -5,21 +5,133 @@
 	<title>Web Audio Visualizer</title>
 	<style>
 	body {
-         background: #eeeeee;
+         background: #000;
          font-family: tahoma, verdana, sans serif;
+        margin-top: 0;
+        color: #aab;
       }
 
       canvas {
-        margin-left:10px;
-        margin-top:10px;
-        box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        margin: auto;
+          margin-top: 0;
         background: black;
+          display: block;
     }
+        
+        h1{
+            font-family: recharge;
+            font-size: 50pt;
+        }
+        
+        select{
+            background: #556;
+            height: 30px;
+            width: 300px;
+            font-family: nasalization;
+            font-size: 10pt;
+            border: none;
+            outline: none;
+            color: #eef;
+        }
+        select:hover{
+            background: #bbc;
+            color: #001;
+        }
+        
+        button{
+            box-shadow: none;
+            border-radius: none;
+            border: none;
+            padding: 10px;
+            height: 50px;
+            background: #556;
+            margin: auto;
+            display: block;
+            font-family: nasalization;
+            font-size: 10pt;
+            color: #eef;
+        }
+        button:hover{
+            background: #bbc;
+            color: #001;
+        }
+        hr{
+            clear:both;
+        }
+        @font-face{
+            font-family: recharge;
+            src: url('fonts/recharge bd.ttf');
+        }
+        
+        @font-face{
+            font-family: nasalization;
+            src: url('fonts/nasalization-rg.ttf');
+        }
       
+        /*slider css taken from https://www.w3schools.com/howto/howto_js_rangeslider.asp*/
+        .slider{
+            -webkit-appearance: none;
+            appearance: none;
+            width: 50%;
+            height: 25px;
+            background: #eef;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .1s;
+            transition: opacity .1s;
+        }
+        .slider:hover{
+            opacity: 1;
+        }
+        .slider::-webkit-slider-thumb{
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 25px;
+            background: #c11;
+            cursor: pointer;
+        }
+        .slider::-moz-range-thumb{
+            width: 30px;
+            height: 25px;
+            background: #334;
+            cursor: pointer;
+        }
+        .checkmark{
+            background-color: #eef;
+            border-radius: none;
+            width: 23px;
+            height: 23px;
+            
+        }
+        
       #controls{
-      	margin-left:10px;
-        margin-top:10px;
+          font-family: nasalization;
+          font-size: 20pt;
+      	margin: auto;
+          margin-top: 20px;
+          display:block;
+          width: 1024px;
       }
+        
+        #audioContainer{
+            margin:auto;
+            width: 75%;
+            text-align: center;
+        }
+        
+        .left{
+            float: left;
+            width: 50%;
+            text-align: right;
+            margin-top: 30px;
+        }
+        .right{
+            float: right;
+            width: 50%;
+            text-align: left;
+            margin-top: 30px;
+        }
 	</style>
 	<script>
     // PROGRAMMED BY Joel Petritsch AND Stephen Callen
@@ -500,7 +612,8 @@
                 }
                 if(noise){
                     if(Math.random() < .09){
-                        data[i]=data[i+1]=data[i+2]=0;//black noise
+                        data[i]=data[i+1]=data[i+2]=255;//white noise
+                        data[i+3]=255; //alpha
                     }
                 }
                 if(lines){
@@ -566,9 +679,13 @@
 	</script>
 </head>
 <body>
-	<canvas id="canvas" width="1024" height="768"></canvas>
+    <canvas id="canvas" width="1024" height="768"></canvas>
+    
 	<div id="controls">
-		<audio controls loop></audio>
+        <h1>DJ ENTERPRISE</h1>
+        <hr>
+		<div id="audioContainer">
+        <audio controls loop></audio><br/>
 		<label>Track: 
 			<select id="trackSelect" >
                 <option value="media/The Picard Song.mp3">The Picard Song</option>
@@ -578,8 +695,13 @@
                           
 
 			</select>
-		</label>
+		</label><br/>
+            
+		<p id="status">???</p>
+            </div>
+        <hr>
 		<button id="fsButton">Go Full Screen</button><br>
+        <!--
         <div>
 		          <label for="slider1">Radius</label>
 		          <input id="slider1" type ="range" min ="2" max="20.0" step ="1" value ="0"/>
@@ -596,8 +718,34 @@
                     <input id="starSpeed" type="range" min="1" max="10" step ="0.1">
                 </label>               
             </p>
-	   </div>      
-		<p id="status">???</p>
+	   </div> 
+        -->
+        <div class="left">
+            <label for="slider1">Radius</label> <br/>
+            <label for="delaySlider">Delay/Reverb</label> <br/>
+            <label for="starSpeed">Star Speed</label> <br/>
+        </div>
+        <div class="right">
+            <input class = "slider" id="slider1" type ="range" min ="2" max="20.0" step ="1" value ="0"/><br/>
+            <input class = "slider" id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1" value="0"><br/>
+            <input class = "slider" id="starSpeed" type="range" min="1" max="10" step ="0.1"><br/>
+        </div>
+        <hr>
+        <div class="left">
+            <label for="myCheckbox">Enable Gun Aiming!</label> <br/>
+            <label for="myCheckbox">Jammed Communications!</label> <br/>
+            <label for="myCheckbox">UV Cameras</label> <br/>
+            <label for="myCheckbox">Lines</label> <br/>
+            <label for="myCheckbox">Bass Booster</label> <br/>
+        </div>
+        <div class="right">
+            <input type="checkbox" class="checkmark" id="RotateCheck" ><br/>
+			<input type="checkbox" class="checkmark" id="NoiseCheck"><br/>
+			<input type="checkbox" class="checkmark" id="InvertCheck"><br/>
+			<input type="checkbox" class="checkmark" id="LineCheck"><br/>
+			<input type="checkbox" class="checkmark" id="boostCheck">
+        </div>
+        <!--
         <div>
 		<span>
 			<label for="myCheckbox">Enable Gun Aiming!</label>
@@ -612,5 +760,6 @@
 			<input type="checkbox" id="boostCheck">
 		</span>
 	</div>
+        -->
 </body>
 </html>
