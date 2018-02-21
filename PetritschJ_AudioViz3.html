@@ -28,18 +28,20 @@
 		"use strict";
 		
 		var NUM_SAMPLES = 256;
-		var SOUND_1 = 'media/New Adventure Theme.mp3';
+		var SOUND_3 = 'media/Imperial.mp3';
 		var SOUND_2 = 'media/Peanuts Theme.mp3';
-		var SOUND_3 = 'media/The Picard Song.mp3';
+		var SOUND_1 = 'media/The Picard Song.mp3';
 		var audioElement;
 		var analyserNode;
 		var canvas,ctx;
-        var maxRadius=200;
+        var maxRadius=4;
+        var length = 8;
         var invert = false, tintRed=false, noise=false, lines =false, doBoost=false;
-		var delayAmount = 0.5;
+		var delayAmount = 0.0;
         var delayNode;
         var bassFilter;
         var trebleFilter;
+        var doRotate = true;
         
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
@@ -56,16 +58,16 @@
             this.rotation = 0;
             this.lasers = [];
             this.fireTimer = 0;
-            this.direction = 1;
+            this.direction = 0;
         }
         
         function Bolt(x,y,rotation){
             this.x = x;
             this.y = y;
-            this.rotation = rotation;
+            this.rotation = -rotation-Math.PI/2;
             this.speed = 15;
-            this.length = 10;
-            this.width = 4;
+            this.length = length;
+            this.width = maxRadius;
             
         }
         
@@ -73,12 +75,12 @@
         Gun.prototype.draw = function(ctx){
             ctx.save();
             ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation);
+            ctx.rotate(-this.rotation);
             ctx.fillStyle = '#aaa';
-            ctx.fillRect(40, -25, 60, 10);
-            ctx.fillRect(40, 15, 60, 10);
+            ctx.fillRect(-30, -85, 10, 60);
+            ctx.fillRect(20, -85, 10, 60);
             ctx.fillStyle = '#444';
-            ctx.fillRect(-20, -40, 60, 80);
+            ctx.fillRect(-40, -40, 80, 60);
             ctx.strokeStyle = '#222';
             ctx.lineWidth = 5;
             ctx.beginPath();
@@ -97,10 +99,10 @@
             
             this.fireTimer += dt;
             
-            //this 0.15 is the threshhold percentage that the chunks of audio data must reach to fire bolts
-            if(percentages[index] > .15){
+            //this 0.05 is the threshhold percentage that the chunks of audio data must reach to fire bolts
+            if(percentages[index] > .05){
                 if(this.fireTimer >= 0.02){
-                    this.fire(ctx);
+                    this.fire(ctx, percentages[index]);
                     this.fireTimer = 0;
                 }
             }
@@ -113,9 +115,30 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(bolt.rotation);
-                ctx.fillStyle = "#0f0";
-                ctx.fillRect(bolt.x, bolt.y, bolt.length, bolt.width);
-                ctx.fillRect(bolt.x, bolt.y + 40, bolt.length, bolt.width);
+                if(percentages[index] > .29){
+                    ctx.fillStyle = "#f00" ;
+                }
+                else if(percentages[index] > .25){
+                    ctx.fillStyle = "#d20" ;
+                }
+                 else if(percentages[index] > .21){
+                    ctx.fillStyle = "#a40" ;
+                }
+                 else if(percentages[index] > .17){
+                    ctx.fillStyle = "#960" ;
+                }
+                 else if(percentages[index] > .13){
+                    ctx.fillStyle = "#690" ;
+                }
+                 else if(percentages[index] > .11){
+                    ctx.fillStyle = "#4a0" ;
+                }
+                 else{
+                    ctx.fillStyle = "#2d0" ;
+                }
+                
+                ctx.fillRect(bolt.x, bolt.y - maxRadius/2, bolt.length, bolt.width);
+                ctx.fillRect(bolt.x, bolt.y + 48-maxRadius/2, bolt.length, bolt.width);
                 ctx.restore();    
             }
         };
@@ -151,7 +174,7 @@
 			playStream(audioElement,SOUND_1);
             
             //sets up guns
-			for(var i=1; i <= 4; i++) { allGuns.push(new Gun(i*100, i * 100)); }
+			for(var i=0; i <= 5; i++) { allGuns.push(new Gun(70 +i*170, 600)); }
             
             //sets up initial stars
             currentStarSpeed = 10;
@@ -237,19 +260,24 @@
             document.getElementById("boostCheck").onchange = function(e){	
                  if( e.target.checked){
 				 	doBoost=true;                     
-                bassFilter.gain.value=40;          
+                bassFilter.gain.value=20;          
                 }				
                 else{
                     doBoost= false;
                      bassFilter.gain.value =0; 
                 }		
 			 };
-            document.getElementById('RedCheck').onchange = function(e){
+             document.getElementById('RotateCheck').checked=true;
+            document.getElementById('RotateCheck').onchange = function(e){
 				if( e.target.checked){
-				 	tintRed=true;
+				 	doRotate = true;
+                    
 				}
                 else{
-                    tintRed = false;
+                    doRotate = false;
+                    for(var i=0; i<allGuns.length; i++){
+                        allGuns[i].rotation = 0;
+                    }
                 }				
 			};
             document.getElementById('InvertCheck').onchange = function(e){
@@ -359,21 +387,24 @@
                 */
                 
                 //this code splits up all data into a number of chunks equal to the number of guns
-                //4 is used because this is the number of guns. If num of guns is changed this must also be changed
-                if(i < data.length/4){
+                //6 is used because this is the number of guns. If num of guns is changed this must also be changed
+                if(i < data.length/6){
                     totals[0] += data[i];
-                }else if (i < 2 * data.length/4){
+                }else if (i < 2 * data.length/8){
                     totals[1] += data[i];
-                }else if (i < 3 * data.length/4){
+                }else if (i < 3 * data.length/8){
                     totals[2] += data[i];
-                }else if (i < data.length){
+                }else if (i < 4 * data.length/8){
                     totals[3] += data[i];
-                }  
-                
+                }else if (i < 5 * data.length/8){
+                    totals[4] += data[i];
+                }else if (i < 6 * data.length/8){
+                    totals[5] += data[i];
+                }
             }
             
             percentages = []; //resets the percentages array
-            var intensity = 2; //since the percentages of each chunk are kind of low (< 25%), use this var to boost the movement of each gun
+            var intensity = 1; //since the percentages of each chunk are kind of low (< 25%), use this var to boost the movement of each gun
             
             //averages within all chunks so that each chunk's number is between 0 and 255 
             for(var i = 0; i < allGuns.length; i++){
@@ -403,7 +434,9 @@
             //updates and draws all guns
             for(var i=0; i<allGuns.length; i++){
                 allGuns[i].update(i);
+                if(doRotate){
                 allGuns[i].rotation = Math.PI / -2 * percentages[i];
+                }
                 allGuns[i].draw(ctx);
             }
             //determines if stars should respawn on the right of the screen
@@ -538,9 +571,9 @@
 		<audio controls loop></audio>
 		<label>Track: 
 			<select id="trackSelect" >
-				<option value="media/New Adventure Theme.mp3">New Adventure Theme</option>
+                <option value="media/The Picard Song.mp3">The Picard Song</option>
+				<option value="media/Imperial.mp3">Imperial</option>
 				<option value="media/Peanuts Theme.mp3">Peanuts Theme</option>
-				<option value="media/The Picard Song.mp3">The Picard Song</option>
                 <option value="media/07 Touch (feat. Paul Williams).mp3">Touch</option>
                           
 
@@ -549,12 +582,12 @@
 		<button id="fsButton">Go Full Screen</button><br>
         <div>
 		          <label for="slider1">Radius</label>
-		          <input id="slider1" type ="range" min ="50" max="400.0" step ="10" value ="200"/>
+		          <input id="slider1" type ="range" min ="2" max="20.0" step ="1" value ="0"/>
 		          <span style="float:right" id="sliderResults">???</span>
             <p>
                 <label>
                     Delay/Reverb
-                    <input id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1">
+                    <input id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1" value="0">
                 </label>               
             </p>
             <p>
@@ -567,15 +600,15 @@
 		<p id="status">???</p>
         <div>
 		<span>
-			<label for="myCheckbox">Tint-Red</label>
-			<input type="checkbox" id="RedCheck">
-            <label for="myCheckbox">Noise</label>
-			<input type="checkbox" id="NoiseCheck">
-            <label for="myCheckbox">Invert</label>
-			<input type="checkbox" id="InvertCheck">
+			<label for="myCheckbox">Enable Gun Aiming!</label>
+			<input type="checkbox" id="RotateCheck" ><br>
+            <label for="myCheckbox">Jammed Communications!</label>
+			<input type="checkbox" id="NoiseCheck"><br>
+            <label for="myCheckbox">UV Cameras</label>
+			<input type="checkbox" id="InvertCheck"><br>
             <label for="myCheckbox">Lines</label>
-			<input type="checkbox" id="LineCheck">
-            <label for="myCheckbox">BOOST</label>
+			<input type="checkbox" id="LineCheck"><br>
+            <label for="myCheckbox">Bass Booster</label>
 			<input type="checkbox" id="boostCheck">
 		</span>
 	</div>
