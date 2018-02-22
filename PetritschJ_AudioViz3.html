@@ -2,25 +2,34 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Web Audio Visualizer</title>
+	<title>DJ Enterprise - Where no audio has gone before</title>
 	<style>
-	body {
-         background: #000;
-         font-family: tahoma, verdana, sans serif;
-        margin-top: 0;
-        color: #aab;
-      }
+        body {
+            background: #000;
+            font-family: tahoma, verdana, sans serif;
+            margin: 0;
+            color: #aab;
+        }
 
-      canvas {
-        margin: auto;
-          margin-top: 0;
-        background: black;
-          display: block;
-    }
+        canvas {
+            margin: auto;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            background: black;
+            display: block;
+            color: #556;
+            border-color: #556;
+            border-width: 15px;
+            border-style: solid;
+            box-shadow: 5px 5px 8px #112 inset;
+            border-radius: 20px;
+        }
         
         h1{
             font-family: recharge;
             font-size: 50pt;
+            text-shadow: 2px 2px 1px #112, -2px -2px 1px #eef;
+            
         }
         
         select{
@@ -34,7 +43,7 @@
             color: #eef;
         }
         select:hover{
-            background: #bbc;
+            background: #66b;
             color: #001;
         }
         
@@ -52,11 +61,27 @@
             color: #eef;
         }
         button:hover{
-            background: #bbc;
+            background: #66b;
             color: #001;
         }
         hr{
             clear:both;
+        }
+        footer{
+            padding: 20px;
+            margin: 20px;
+            color: #556;
+            background: #bbc;
+            text-align: center;
+            font-family: nasalization;
+            border-color: #556;
+            border-width: 15px;
+            border-style: solid;
+            font-size: 20pt;
+            clear: both;
+            box-shadow: 5px 5px 8px #112 inset;
+            border-radius: 20px;
+            text-shadow: 1px 1px 1px #112, -1px -1px 1px #eef;
         }
         @font-face{
             font-family: recharge;
@@ -66,6 +91,11 @@
         @font-face{
             font-family: nasalization;
             src: url('fonts/nasalization-rg.ttf');
+        }
+        
+        @font-face{
+            font-family: destructobeam;
+            src: url('fonts/destructobeambb_reg.ttf');
         }
       
         /*slider css taken from https://www.w3schools.com/howto/howto_js_rangeslider.asp*/
@@ -131,16 +161,31 @@
       #controls{
           font-family: nasalization;
           font-size: 20pt;
-      	margin: auto;
-          margin-top: 20px;
           display:block;
           width: 1024px;
+          
+          padding: 20px;
+          margin: auto;
+          color: #556;
+          background: #bbc;
+          border-color: #556;
+          border-width: 15px;
+          border-style: solid;
+          box-shadow: 5px 5px 8px #112 inset;
+          border-radius: 20px;
+          text-shadow: 1px 1px 1px #112, -1px -1px 1px #eef;
       }
         
         #audioContainer{
             margin:auto;
             width: 75%;
             text-align: center;
+        }
+        #fontloader{
+            font-family: destructobeam;
+            text-indent: 100%;
+            white-space: nowrap;
+            overflow: hidden;
         }
         
         .left{
@@ -180,6 +225,10 @@
         
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
+        
+        //used for drawing text
+        var showText = true;
+        var textTimer = 0;
         
         //used for drawing the stars and the guns
         var allStars = [];
@@ -575,6 +624,17 @@
                 allStars[i].update();
                 allStars[i].draw();
             }
+            
+            //draws ship
+            ctx.fillStyle = "#777";
+            ctx.beginPath();
+            ctx.moveTo(-10, 570);
+            ctx.lineTo(canvas.width + 10, 690);
+            ctx.lineTo(canvas.width + 10, canvas.height + 10);
+            ctx.lineTo(-10, canvas.height + 10);
+            ctx.closePath();
+            ctx.fill();
+            
             //updates and draws all guns
             for(var i=0; i<allGuns.length; i++){
                 allGuns[i].update(i);
@@ -605,8 +665,8 @@
                 }
                 ctx.stroke();
                 
-                var glowHeight = 100*Math.sin(performance.now() / 500);
-                glowHeight = Math.floor(glowHeight);
+                //makes the shield gradient
+                var glowHeight = Math.floor(100*Math.sin(performance.now() / 500));
                 var grad = ctx.createLinearGradient(0,canvas.height,0,320 + glowHeight);
                 grad.addColorStop(0, "rgba(255,255,0,0.7)");
                 grad.addColorStop(1, "rgba(0,0,0,0)");
@@ -614,11 +674,26 @@
                 ctx.fillRect(0,300,canvas.width,canvas.height);
             }
             
+            drawWords();
+            
             //determines if stars should respawn on the right of the screen
             respawnStar();            
             manipulatePixels();
 			 
 		}
+        
+        function drawWords(){
+            if(showText){
+                ctx.fillStyle = '#0f0';
+                ctx.font = '40pt destructobeam'
+                ctx.fillText("CAMERA 01", canvas.width - 400, canvas.height - 40);
+            }
+            textTimer += dt;
+            if(textTimer >= 1){
+                showText = !showText;
+                textTimer = 0;
+            }
+        }
         
         //makes a star with a speed equal to between 0.8 and 5 times the input speed
         function makeStar(speed){
@@ -783,6 +858,11 @@
 			<input type="checkbox" class="checkmark" id="InvertCheck"><br/>
 			<input type="checkbox" class="checkmark" id="boostCheck">
         </div>
-        
+        <hr>
+    </div>
+    <footer>
+        <p>Joel Petritsch, Stephen Callen | 2018</p>
+        <p id="fontloader">load destructobeam font</p>
+    </footer>
 </body>
 </html>
