@@ -189,6 +189,10 @@
         var allGuns = [];
         var percentages = []; //will store how intense each of the chunks of audio data is
         
+        //used for drawing the bezier curve (shield / waveform visualisation)
+        var shieldHeight = 300;
+        var shieldPts = [];
+        
         function Gun(x,y){
             this.x = x;
             this.y = y;
@@ -530,12 +534,8 @@
             }
 			// DRAW!
 			ctx.clearRect(0,0,canvas.width,canvas.height);  
-			var barWidth = 4;
-			var barSpacing = 1;
-			var barHeight = 100;
-			var topSpacing = 50;            
-            var lastY = window.innerHeight/2;
-            var lastX =0;
+			           
+            
             
             var totals = [];
             for(var i = 0; i < allGuns.length; i++){
@@ -572,20 +572,6 @@
                 percentages.push(totals[i] / 256 * intensity);
             }
             
-            /* old code, draws a squiggle
-            for(var i=0; i<data.length; i++) { 
-                ctx.strokeStyle="green";                
-                ctx.lineWidth= 4;
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo((i+1) * (barWidth), topSpacing+256-data[i]);
-                lastX =(i+1) * (barWidth);
-                lastY = topSpacing+256-data[i];
-                ctx.closePath();
-                ctx.stroke();
-			}
-            */
-            
             //updates and draws all stars
             for(var i = 0; i < allStars.length; i++){
                 allStars[i].update();
@@ -594,11 +580,42 @@
             //updates and draws all guns
             for(var i=0; i<allGuns.length; i++){
                 allGuns[i].update(i);
+                
                 if(doRotate){
                 allGuns[i].rotation = Math.PI / -2 * percentages[i];
                 }
+                else{
+                    allGuns[i].rotation = 0;
+                }
                 allGuns[i].draw(ctx);
             }
+            
+            //draws shield (weapon type 3)
+            if(weaponType == 3){
+                var lastY = shieldHeight;
+                var lastX = 0;
+                var pointSpacing = (canvas.width + 30) / data.length; //add 30 so the line extends offscreen the slightest bit
+                
+                ctx.strokeStyle="yellow";                
+                ctx.lineWidth= 10;
+                ctx.lineCap='round';
+                ctx.beginPath();
+                ctx.moveTo(lastX - 20, lastY); //minus 20 so the line extends offscreen the slightest bit
+                
+                for(var i=0; i<data.length; i+=3) {
+                    ctx.bezierCurveTo(i * pointSpacing, shieldHeight+2*(128-data[i]),(i + 1) * (pointSpacing), shieldHeight+2*(128-data[i+1]), (i + 2) * (pointSpacing), shieldHeight+2*(128-data[i+2]));
+                }
+                ctx.stroke();
+                
+                var glowHeight = 100*Math.sin(performance.now() / 500);
+                glowHeight = Math.floor(glowHeight);
+                var grad = ctx.createLinearGradient(0,canvas.height,0,320 + glowHeight);
+                grad.addColorStop(0, "rgba(255,255,0,0.7)");
+                grad.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0,300,canvas.width,canvas.height);
+            }
+            
             //determines if stars should respawn on the right of the screen
             respawnStar();            
             manipulatePixels();
@@ -735,7 +752,7 @@
                 <option value=0>Auto Cannons</option>
 				<option value=1>Superheated Acid Throwers</option>
 				<option value=2>Torpedos</option>
-                <option value=3>Diplomacy, Hail their Ship</option> 
+                <option value=3>Engage Shields</option> 
             </select>
 		</label><br/>
             
