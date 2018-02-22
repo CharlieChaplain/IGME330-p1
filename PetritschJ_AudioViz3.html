@@ -163,9 +163,7 @@
 		"use strict";
 		
 		var NUM_SAMPLES = 256;
-		var SOUND_3 = 'media/Imperial.mp3';
-		var SOUND_2 = 'media/Peanuts Theme.mp3';
-		var SOUND_1 = 'media/The Picard Song.mp3';
+		var SOUND_1 = 'media/Picard.mp3';
 		var audioElement;
 		var analyserNode;
 		var canvas,ctx;
@@ -738,10 +736,10 @@
         <audio controls loop></audio><br/>
 		<label>Track: 
 			<select id="trackSelect" >
-                <option value="media/The Picard Song.mp3">The Picard Song</option>
+                <option value="media/Picard.mp3">The Picard Song</option>
 				<option value="media/Imperial.mp3">Imperial</option>
 				<option value="media/Avast your Ass - Kitsune 2.mp3">Avast your Ass</option>
-                <option value="media/07 Touch (feat. Paul Williams).mp3">Touch</option>
+                <option value="media/Touch.mp3">Touch</option>
                 <option value="media/Potential for Anything.mp3">Potential for Anything</option>
                           
 
@@ -768,7 +766,7 @@
         </div>
         <div class="right">
             <input class = "slider" id="slider1" type ="range" min ="2" max="20.0" step ="1" value ="0"/><br/>
-            <input class = "slider" id="delaySlider" type="range" min="0.0" max="2.5" step ="0.1" value="0"><br/>
+            <input class = "slider" id="delaySlider" type="range" min="0.0" max="1" step ="0.1" value="0"><br/>
             <input class = "slider" id="starSpeed" type="range" min="1" max="10" step ="0.1"><br/>
         </div>
         <hr>
