@@ -227,8 +227,22 @@
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(0, 0, 5, 0, Math.PI*2, false);
-            ctx.stroke();
+            ctx.stroke();       
+            ctx.closePath();
             ctx.restore();
+            if(weaponType == 1){//Plasma cannons only  
+                ctx.save()  
+                //Draw some red hot heat dispersions, as throwing around all that energy makes for  some hot barrels
+                ctx.translate(this.x, this.y);
+                ctx.rotate(-this.rotation);            
+                var tempGradient =  ctx.createLinearGradient(-20, -70, -30, 5);
+                tempGradient.addColorStop(0, "rgba(0, 255, 0, 0)" );
+                tempGradient.addColorStop(1, " rgba(0, 255, 0, 1)");            
+                ctx.fillStyle = tempGradient;
+                ctx.fillRect(-20, -70, 40, 30);
+                ctx.restore();               
+             }
+            
         };
         
         //updates the gun and it's lasers
@@ -242,7 +256,7 @@
                     this.fire(ctx, percentages[index]);
                     this.fireTimer = 0;
                 }
-            }
+            }            
             
             //updates all current bolts
             for(var i = 0; i< this.lasers.length; i++){
@@ -309,10 +323,7 @@
                     
                 }
                 else if(weaponType == 3) {  
-                    ctx.beginPath(); 
-                    ctx.arc(bolt.x-24, bolt.y+24, maxRadius, 0, Math.PI*2); 
-                    ctx.closePath();
-                    ctx.fill();                        
+                                  
                     ctx.restore();
                 }
         
@@ -351,7 +362,7 @@
 			playStream(audioElement,SOUND_1);
             
             //sets up guns
-			for(var i=0; i <= 5; i++) { allGuns.push(new Gun(70 +i*170, 600)); }
+			for(var i=0; i <= 5; i++) { allGuns.push(new Gun(70 +i*170, (570+ i*30))); }
             
             //sets up initial stars
             currentStarSpeed = 10;
@@ -482,15 +493,7 @@
                 else{
                     noise = false;
                 }				
-			};	
-            document.getElementById('LineCheck').onchange = function(e){
-				if( e.target.checked){
-				 	lines=true;
-				}
-                else{
-                    lines = false;
-                }				
-			};	
+			};	            
 		}
 		
 		function playStream(audioElement,path){
@@ -518,11 +521,13 @@
 			
 			// populate the array with the frequency data
 			// notice these arrays can be passed "by reference" 
-			analyserNode.getByteFrequencyData(data);
-		
+            if(weaponType != 3){
+                analyserNode.getByteFrequencyData(data);
+            }
+            else{
 			// OR
-			//analyserNode.getByteTimeDomainData(data); // waveform data
-			
+			analyserNode.getByteTimeDomainData(data); // waveform data
+            }
 			// DRAW!
 			ctx.clearRect(0,0,canvas.width,canvas.height);  
 			var barWidth = 4;
@@ -541,10 +546,6 @@
 			for(var i=0; i<data.length; i++) { 
 				ctx.fillStyle = 'rgba(0,255,0,0.6)'; 
 				
-				
-                
-               
-                
                 //this code splits up all data into a number of chunks equal to the number of guns
                 //6 is used because this is the number of guns. If num of guns is changed this must also be changed
                 if(i < data.length/6){
@@ -599,8 +600,7 @@
                 allGuns[i].draw(ctx);
             }
             //determines if stars should respawn on the right of the screen
-            respawnStar();
-            
+            respawnStar();            
             manipulatePixels();
 			 
 		}
@@ -662,21 +662,7 @@
                         data[i]=data[i+1]=data[i+2]=255;//white noise
                         data[i+3]=255; //alpha
                     }
-                }
-                if(lines){
-                    var row=Math.floor(i/4/width);
-                    
-                    if(row % 50 == 0){
-                        
-                        //this row 
-                        data[i]=data[i+1]=data[i+2]=data[i+3]=255;
-                        //next row 
-                        data[i+(width*4)]=
-                        data[i+(width*4)+1]=
-                        data[i+(width*4)+2]=
-                        data[i+(width*4)+3]=255;
-                    }
-                }
+                }               
             }
             ctx.putImageData(imgData,0,0);
             
@@ -721,7 +707,7 @@
 		
 		
 		window.addEventListener("load",init);
-	}());
+    }());
 		
 	</script>
 </head>
@@ -773,14 +759,13 @@
             <label for="myCheckbox">Enable Gun Aiming!</label> <br/>
             <label for="myCheckbox">Jammed Communications!</label> <br/>
             <label for="myCheckbox">UV Cameras</label> <br/>
-            <label for="myCheckbox">Lines</label> <br/>
+
             <label for="myCheckbox">Bass Booster</label> <br/>
         </div>
         <div class="right">
             <input type="checkbox" class="checkmark" id="RotateCheck" ><br/>
 			<input type="checkbox" class="checkmark" id="NoiseCheck"><br/>
 			<input type="checkbox" class="checkmark" id="InvertCheck"><br/>
-			<input type="checkbox" class="checkmark" id="LineCheck"><br/>
 			<input type="checkbox" class="checkmark" id="boostCheck">
         </div>
         
