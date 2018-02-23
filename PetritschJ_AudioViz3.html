@@ -221,8 +221,7 @@
         var trebleFilter;
         var doRotate = true;
         var weaponType =0;
-        var rechargeRate =0.02;
-        
+        var rechargeRate =0.02;        
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
         
@@ -240,7 +239,7 @@
         var shieldHeight = 300;
         var shieldPts = [];
         
-        function Gun(x,y){
+        function Gun(x,y){//Defines varibles for the guns to rotate and be drawn
             this.x = x;
             this.y = y;
             this.rotation = 0;
@@ -249,7 +248,7 @@
             this.direction = 0;
         }
         
-        function Bolt(x,y,rotation){
+        function Bolt(x,y,rotation){//Defines varibles for the guns fired muntions to travel
             this.x = x;
             this.y = y;
             this.rotation = -rotation-Math.PI/2;
@@ -317,7 +316,7 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(bolt.rotation);
-                if(percentages[index] > .29){
+                if(percentages[index] > .29){//Change color and intensity of bolts to match intensity of sound
                     ctx.fillStyle = "#f00" ;
                     ctx.strokeStyle = "#f00" ;
                     ctx.lineWidth=29;
@@ -353,7 +352,7 @@
                     ctx.lineWidth=15;
                 }
                 
-                if(weaponType ==0){                    
+                if(weaponType ==0){//change ammo based on weapon type                    
                 ctx.fillRect(bolt.x, bolt.y - maxRadius/2, bolt.length, bolt.width);
                 ctx.fillRect(bolt.x, bolt.y + 48-maxRadius/2, bolt.length, bolt.width);
                 ctx.restore();    
@@ -433,11 +432,11 @@
 			// The || is because WebAudio has not been standardized across browsers yet
 			// http://webaudio.github.io/web-audio-api/#the-audiocontext-interface
 			audioCtx = new (window.AudioContext || window.webkitAudioContext);		
-           
+           //Create 2 filters for bass and treble
             bassFilter =audioCtx.createBiquadFilter();
             bassFilter.type = "lowshelf";
             bassFilter.frequency.vale = 200;
-            if(doBoost){
+            if(doBoost){//bass boost
             bassFilter.gain.value=40;
             }
             else{
@@ -474,7 +473,7 @@
 			return analyserNode;
 		}
 		
-		function setupUI(){
+		function setupUI(){//hooks up event listeners
 			document.querySelector("#trackSelect").onchange = function(e){
 				playStream(audioElement,e.target.value);
 			};
@@ -495,12 +494,10 @@
 				requestFullscreen(canvas);
 			};
              document.querySelector("#slider1").onchange = function(e){	
-                 maxRadius = e.target.value;
-                 console.log(maxRadius);                 
+                 maxRadius = e.target.value;                              
 			 };
              document.querySelector("#delaySlider").onchange = function(e){	
-                 delayAmount = e.target.value;
-                 console.log(delayAmount);
+                 delayAmount = e.target.value;                
 			 };
             //the star speed range selector
              document.querySelector('#starSpeed').onchange = function(e){
@@ -547,7 +544,7 @@
 			};	            
 		}
 		
-		function playStream(audioElement,path){
+		function playStream(audioElement,path){//play the song, and display its title
 			audioElement.src = path;
 			audioElement.play();
 			audioElement.volume = 0.2;
@@ -583,7 +580,7 @@
 			ctx.clearRect(0,0,canvas.width,canvas.height);  
 			           
             
-            
+            //clears gun data
             var totals = [];
             for(var i = 0; i < allGuns.length; i++){
                     totals.push(0);
@@ -730,24 +727,24 @@
             }
         }
         
-        function manipulatePixels(){
-            var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+        function manipulatePixels(){//does canvas pixel manipulation
+            var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);//get data from canvas
             
             var data= imgData.data;
             var length = data.length;
             var width = imgData.width;
             
             for (var i=0; i< length; i+=4){
-                if(tintRed){
+                if(tintRed){//tint things red
                     data[i] += 100;
                 }
-                if(invert){
+                if(invert){//invert colors
                     var red = data[i], green = data[i+1], blue = data[i+2];
                     data[i]=255-red;
                     data[i+1]=255-green;
                     data[i+2]=255-blue;
                 }
-                if(noise){
+                if(noise){//make some noise
                     if(Math.random() < .09){
                         data[i]=data[i+1]=data[i+2]=255;//white noise
                         data[i+3]=255; //alpha
