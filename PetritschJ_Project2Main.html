@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Amorphious++</title>
+	<style>
+        body {
+            background: #000;
+            font-family: tahoma, verdana, sans serif;
+            margin: 0;
+            color: #aab;
+        }
+        canvas {
+            margin: auto;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            background: black;
+            display: block;
+            color: #556;
+            border-color: #556;
+            border-width: 15px;
+            border-style: solid;
+            box-shadow: 5px 5px 8px #112 inset;
+            border-radius: 20px;
+        }        
+        h1{
+            font-family: recharge;
+            font-size: 50pt;
+            text-shadow: 2px 2px 1px #112, -2px -2px 1px #eef;
+            
+        } 
+        hr{
+            clear:both;
+        }
+        footer{
+            padding: 20px;
+            margin: 20px;
+            color: #556;
+            background: #bbc;
+            text-align: center;
+            font-family: nasalization;
+            border-color: #556;
+            border-width: 15px;
+            border-style: solid;
+            font-size: 20pt;
+            clear: both;
+            box-shadow: 5px 5px 8px #112 inset;
+            border-radius: 20px;
+            text-shadow: 1px 1px 1px #112, -1px -1px 1px #eef;
+        }
+     
+      
+        
+	</style>
+	<script>
+    // PROGRAMMED BY Joel Petritsch AND Stephen Callen
+	// An IIFE ("Iffy") - see the notes in mycourses
+	(function(){
+		"use strict";	
+		
+
+		var canvas,ctx;     
+      
+        var lastTime = 0; //used by calculateDeltaTime
+        var dt;
+        var player = {
+            x:100,
+            y:100,
+            img: undefined
+        };
+        var mouse = {
+            x:undefined,
+            y:undefined
+        }
+         var movementVector = {
+            x:undefined,
+            y:undefined
+        }
+        
+        function doMouseMove(e){        
+        mouse.x = e.pageX - e.target.offsetLeft;
+        mouse.y = e.pageY - e.target.offsetTop;
+        }
+   
+        
+		function init(){
+			// set up canvas stuff
+			canvas = document.querySelector('canvas');
+			ctx = canvas.getContext("2d");	
+			
+            player.img = document.getElementById("player"); 
+			// start animation loop
+			update();
+            canvas.onmousemove = doMouseMove;
+           
+            
+		}
+		
+		
+	   
+		
+		
+		
+		function update() { 
+			// this schedules a call to the update() method in 1/60 seconds
+            dt = calculateDeltaTime();
+            ctx.fillRect(0,0,1024,768)
+			
+            
+            movePlayer();
+            
+			requestAnimationFrame(update);            
+           
+			
+		}
+        function movePlayer(){           
+            movementVector.x = mouse.x - player.x;
+            movementVector.y = mouse.y - player.y;
+            if(Math.abs(movementVector.x)> 1){// if we are more than like, 3 pixels away
+                player.x = player.x +  clamp(movementVector.x, -3, 3);//actually move player
+            }
+            if(Math.abs(movementVector.y)> 1){// if we are more than like, 3 pixels away
+                player.y = player.y +  clamp(movementVector.y, -3, 3);//Move player normalized distance
+            }
+            
+            ctx.save();
+            ctx.translate(player.x-13, player.y-26);
+            ctx.rotate(Math.atan2(movementVector.y, movementVector.x));
+            ctx.drawImage(player.img,0,0);    
+            ctx.restore();
+        }
+        
+               
+        
+		
+		// HELPERS
+		function makeColor(red, green, blue, alpha){
+   			var color='rgba('+red+','+green+','+blue+', '+alpha+')';
+   			return color;
+		}
+        function calculateDeltaTime(){
+            var now,fps;
+            now = performance.now(); 
+            fps = 1000 / (now - lastTime);
+            fps = clamp(fps, 12, 60);
+            lastTime = now; 
+            return 1/fps;
+	    }        
+        function clamp(val, min, max){
+	        return Math.max(min, Math.min(max, val));
+        }       
+      
+		 // FULL SCREEN MODE
+		function requestFullscreen(element) {
+			if (element.requestFullscreen) {
+			  element.requestFullscreen();
+			} else if (element.mozRequestFullscreen) {
+			  element.mozRequestFullscreen();
+			} else if (element.mozRequestFullScreen) { // camel-cased 'S' was changed to 's' in spec
+			  element.mozRequestFullScreen();
+			} else if (element.webkitRequestFullscreen) {
+			  element.webkitRequestFullscreen();
+			}
+			// .. and do nothing if the method is not supported
+		};
+		
+		window.addEventListener("load",init);
+    }());
+		
+	</script>
+</head>
+<body>
+    <img src="Character.png" id="player">
+    <canvas id="canvas" width="1024" height="768"></canvas>  
+	
+    <footer>
+        <p>Joel Petritsch, Stephen Callen | 2018</p>        
+    </footer>
+</body>
+    
+</html>
