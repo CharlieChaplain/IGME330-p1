@@ -122,17 +122,20 @@
 		}
         function movePlayer(){     
             if(timeLeft ==0){//if we can move, move
+                
                 movementVector.x = mouse.x - player.x;
                 movementVector.y = mouse.y - player.y;
                 var magnitude = (movementVector.x * movementVector.x) + (movementVector.y * movementVector.y);
-                magnitude = Math.sqrt(magnitude);
-                angle = Math.atan2(movementVector.y, movementVector.x)
+                magnitude = Math.sqrt(magnitude);//always move a specific speed
                 
-                if(Math.abs(movementVector.x)> 1){// if we are more than like, 3 pixels away
-                    player.x = player.x + movementVector.x*3/magnitude;//actually move player
+                angle = Math.atan2(movementVector.y, movementVector.x)
+              
+                
+                if(Math.abs(movementVector.x)> 26){// if we are more than like, 3 pixels away
+                    player.x = player.x + dt*movementVector.x*300/magnitude;//actually move player
                 }
-                if(Math.abs(movementVector.y)> 1){// if we are more than like, 3 pixels away
-                    player.y = player.y +  movementVector.y*3/magnitude;//Move player normalized distance
+                if(Math.abs(movementVector.y)> 26){// if we are more than like, 3 pixels away
+                    player.y = player.y +  dt*movementVector.y*300/magnitude;//Move player normalized distance
                 }                
             }
             else{//otherwise, just swing the weapon.
@@ -148,8 +151,8 @@
             ctx.rotate(angle);
             ctx.drawImage(player.img,0,0);   
             ctx.translate(13, 26);
-            if(timeLeft>0){
-                ctx.rotate(angle -((1-timeLeft) * Math.PI));
+            if(timeLeft>0){               
+                ctx.rotate(((-1+timeLeft) * Math.PI));               
             }
             ctx.beginPath();            
             ctx.strokeStyle = "red";
