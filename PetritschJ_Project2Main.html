@@ -64,11 +64,13 @@
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
         var angle =0;
+        var swordAngle;
         var player = {
             x:100,
             y:100,
             img: undefined
         };
+        var enemies = [];
         var mouse = {
             x:undefined,
             y:undefined
@@ -115,7 +117,7 @@
 			
             
             movePlayer();
-            
+            updateEnemies()
 			requestAnimationFrame(update);            
            
 			
@@ -147,11 +149,21 @@
             
            
             ctx.save();
-            ctx.translate(player.x-13, player.y-26);
+            ctx.translate(player.x, player.y);
             ctx.rotate(angle);
+            ctx.translate(-13, -26);            
             ctx.drawImage(player.img,0,0);   
             ctx.translate(13, 26);
-            if(timeLeft>0){               
+            if(timeLeft>0){       
+                swordAngle = angle + ((-1+timeLeft) * Math.PI) ;
+                if(swordAngle< 0){
+                        swordAngle+= Math.PI*2//0 is straight down
+                    }
+                swordAngle -= Math.PI/2;//update sword for collisions
+                if(swordAngle< 0){
+                        swordAngle+= Math.PI*2//0 is straight down
+                    }
+                console.log(swordAngle*180/Math.PI);
                 ctx.rotate(((-1+timeLeft) * Math.PI));               
             }
             ctx.beginPath();            
@@ -163,7 +175,56 @@
                 
         }
         
-               
+        function updateEnemies(){
+            var toDelete = -1;
+            while(enemies.length < 3){
+                var temp ={
+                    x : Math.random() * 1024,
+                    y : Math.random() * 768,
+                    DeltaX : (Math.random()-.5) * 600,
+                    DeltaY : (Math.random()-.5) * 600, 
+                    img : document.getElementById("Blob"),
+                    radius: 16
+                    
+                }
+                console.dir(temp);
+                enemies.push(temp);
+            }
+            
+            for(var i =0; i < 3; i++){
+                if(enemies[i].x < 0 || enemies[i].x > 1024 || enemies[i].y < 0 || enemies[i].y > 768){//if we go off screen, delete this next frame
+                    toDelete = i;
+                }
+                else{//if we are still on screen
+                    var enemyAngle = {x:0,y:0,magnitude:0,angle:0};
+                    enemyAngle.x= player.x - enemies[i].x;
+                    enemyAngle.y = player.y - enemies[i].y;
+                    enemyAngle.magnitude = Math.sqrt((enemyAngle.x* enemyAngle.x) + (enemyAngle.y * enemyAngle.y));
+                    enemyAngle.angle = Math.atan2(enemyAngle.y, enemyAngle.x);
+                    if(enemyAngle.angle < 0){//edit angle for matchmaking
+                        enemyAngle.angle += Math.PI*2
+                    }
+                    console.log(enemyAngle.angle * 180/Math.PI);
+                    if( timeLeft > 0){//if we are swinging
+                        var anglediff = Math.abs(enemyAngle.angle - swordAngle) * 180/Math.PI;
+                        if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
+                            toDelete =i;
+                        }
+                    }
+                    enemies[i].x += enemies[i].DeltaX*dt;
+                    enemies[i].y += enemies[i].DeltaY*dt;
+                }
+                ctx.save();
+                ctx.translate(-19,-17)
+                ctx.drawImage(enemies[i].img, enemies[i].x, enemies[i].y)
+                ctx.restore();
+            }               
+            if(toDelete != -1){
+                enemies.splice(toDelete, 1);
+            }
+            
+            
+        }
         
 		
 		// HELPERS
@@ -204,6 +265,7 @@
 </head>
 <body>
     <img src="Character.png" id="player">
+    <img src="AngeryBoi.png" id="Blob">
     <canvas id="canvas" width="1024" height="768"></canvas>  
 	
     <footer>
