@@ -60,9 +60,10 @@
 		
 
 		var canvas,ctx;     
-      
+        var timeLeft=0;
         var lastTime = 0; //used by calculateDeltaTime
         var dt;
+        var angle =0;
         var player = {
             x:100,
             y:100,
@@ -81,6 +82,11 @@
         mouse.x = e.pageX - e.target.offsetLeft;
         mouse.y = e.pageY - e.target.offsetTop;
         }
+        function doMouseDown(e){        
+            if(timeLeft==0){
+             timeLeft = 1;
+            }
+        }
    
         
 		function init(){
@@ -92,6 +98,7 @@
 			// start animation loop
 			update();
             canvas.onmousemove = doMouseMove;
+            canvas.onmousedown = doMouseDown;
            
             
 		}
@@ -113,21 +120,44 @@
            
 			
 		}
-        function movePlayer(){           
-            movementVector.x = mouse.x - player.x;
-            movementVector.y = mouse.y - player.y;
-            if(Math.abs(movementVector.x)> 1){// if we are more than like, 3 pixels away
-                player.x = player.x +  clamp(movementVector.x, -3, 3);//actually move player
+        function movePlayer(){     
+            if(timeLeft ==0){//if we can move, move
+                movementVector.x = mouse.x - player.x;
+                movementVector.y = mouse.y - player.y;
+                var magnitude = (movementVector.x * movementVector.x) + (movementVector.y * movementVector.y);
+                magnitude = Math.sqrt(magnitude);
+                angle = Math.atan2(movementVector.y, movementVector.x)
+                
+                if(Math.abs(movementVector.x)> 1){// if we are more than like, 3 pixels away
+                    player.x = player.x + movementVector.x*3/magnitude;//actually move player
+                }
+                if(Math.abs(movementVector.y)> 1){// if we are more than like, 3 pixels away
+                    player.y = player.y +  movementVector.y*3/magnitude;//Move player normalized distance
+                }                
             }
-            if(Math.abs(movementVector.y)> 1){// if we are more than like, 3 pixels away
-                player.y = player.y +  clamp(movementVector.y, -3, 3);//Move player normalized distance
+            else{//otherwise, just swing the weapon.
+            timeLeft-= dt;
+                if(timeLeft < 0){
+                    timeLeft = 0;
+                }
             }
             
+           
             ctx.save();
             ctx.translate(player.x-13, player.y-26);
-            ctx.rotate(Math.atan2(movementVector.y, movementVector.x));
-            ctx.drawImage(player.img,0,0);    
+            ctx.rotate(angle);
+            ctx.drawImage(player.img,0,0);   
+            ctx.translate(13, 26);
+            if(timeLeft>0){
+                ctx.rotate(angle -((1-timeLeft) * Math.PI));
+            }
+            ctx.beginPath();            
+            ctx.strokeStyle = "red";
+            ctx.moveTo(0,0);
+            ctx.lineTo(0,100);
+            ctx.stroke();
             ctx.restore();
+                
         }
         
                
