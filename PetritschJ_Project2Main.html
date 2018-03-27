@@ -68,7 +68,9 @@
         var player = {
             x:100,
             y:100,
-            img: undefined
+            img: undefined,
+            animations: [],
+            currentAnimation: undefined
         };
         var enemies = [];
         var mouse = {
@@ -79,10 +81,34 @@
             x:undefined,
             y:undefined
         }
+        function Animation(image, numFrames, secondsPerFrame, frameWidth, frameHeight){
+            this.image = image;
+            this.numFrames = numFrames;
+            this.spf = secondsPerFrame;
+            this.width = frameWidth;
+            this.height = frameHeight;
+            this.currentFrame = 0;
+            this.animTimer = 0;
+        }
+        Animation.prototype.updateAnimation = function(){
+            this.animTimer += dt;
+            if(this.animTimer >= this.spf){
+                this.animTimer = 0;
+                if(this.currentFrame >= this.numFrames - 1){
+                    this.currentFrame = 0;
+                }
+                else{
+                    this.currentFrame++;
+                }
+            }
+        }
+        Animation.prototype.drawAnimation = function(ctx, x, y){
+            ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
+        }
         
         function doMouseMove(e){        
-        mouse.x = e.pageX - e.target.offsetLeft;
-        mouse.y = e.pageY - e.target.offsetTop;
+            mouse.x = e.pageX - e.target.offsetLeft;
+            mouse.y = e.pageY - e.target.offsetTop;
         }
         function doMouseDown(e){        
             if(timeLeft==0){
@@ -96,7 +122,11 @@
 			canvas = document.querySelector('canvas');
 			ctx = canvas.getContext("2d");	
 			
-            player.img = document.getElementById("player"); 
+            player.img = document.getElementById("player");
+            var walkAnim = new Animation(player.img, 4, 0.25, 46, 46);
+            player.animations.push(walkAnim);
+            player.currentAnimation = player.animations[0];
+            
 			// start animation loop
 			update();
             canvas.onmousemove = doMouseMove;
@@ -151,8 +181,9 @@
             ctx.save();
             ctx.translate(player.x, player.y);
             ctx.rotate(angle);
-            ctx.translate(-13, -26);            
-            ctx.drawImage(player.img,0,0);   
+            ctx.translate(-13, -26); 
+            player.currentAnimation.updateAnimation();
+            player.currentAnimation.drawAnimation(ctx, 0, 0);  
             ctx.translate(13, 26);
             if(timeLeft>0){       
                 swordAngle = angle + ((-1+timeLeft) * Math.PI) ;
@@ -264,7 +295,7 @@
 	</script>
 </head>
 <body>
-    <img src="Character.png" id="player">
+    <img src="CharacterV2.png" id="player">
     <img src="AngeryBoi.png" id="Blob">
     <canvas id="canvas" width="1024" height="768"></canvas>  
 	
