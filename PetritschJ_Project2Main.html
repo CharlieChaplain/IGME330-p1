@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,7 +195,7 @@
                 if(swordAngle< 0){
                         swordAngle+= Math.PI*2//0 is straight down
                     }
-                console.log(swordAngle*180/Math.PI);
+               
                 ctx.rotate(((-1+timeLeft) * Math.PI));               
             }
             ctx.beginPath();            
@@ -215,9 +216,60 @@
                     DeltaX : (Math.random()-.5) * 600,
                     DeltaY : (Math.random()-.5) * 600, 
                     img : document.getElementById("Blob"),
+                    type : 0,
                     radius: 16
                     
                 }
+                var Determinator = Math.random()*4;
+                Determinator = Math.trunc(Determinator);// Determine Spawn Location
+                switch(Determinator){
+                    case 1:
+                        temp.x =0;
+                        if(temp.DeltaX < 0){
+                            temp.DeltaX *=-1;
+                        }
+                        break;
+                    case 2:
+                        temp.x=1024;
+                        if(temp.DeltaX > 0){
+                            temp.DeltaX *=-1;
+                        }
+                        temp.img = document.getElementById("BluBlob")
+                        break;
+                    case 3:
+                        temp.y=0;
+                         if(temp.DeltaY < 0){
+                            temp.DeltaY*=-1;
+                        }
+                         temp.img = document.getElementById("RedBlob")
+                        break;
+                    default:
+                        if(temp.DeltaY > 0){
+                            temp.DeltaY*=-1;
+                        }
+                        temp.y = 768;
+                        break;
+                }
+                
+                Determinator = Math.random()*3;//Determine enemy Type
+                Determinator = Math.trunc(Determinator);
+                switch(Determinator){                  
+                    case 1:                       
+                        temp.img = document.getElementById("BluBlob")
+                        temp.type = 1;
+                        break;
+                    case 2:
+                        temp.img = document.getElementById("RedBlob")
+                        temp.type = 2;
+                        break;
+                    default:                      
+                        break;
+                }
+                
+                
+                
+                
+                
                 console.dir(temp);
                 enemies.push(temp);
             }
@@ -233,9 +285,37 @@
                     enemyAngle.magnitude = Math.sqrt((enemyAngle.x* enemyAngle.x) + (enemyAngle.y * enemyAngle.y));
                     enemyAngle.angle = Math.atan2(enemyAngle.y, enemyAngle.x);
                     if(enemyAngle.angle < 0){//edit angle for matchmaking
-                        enemyAngle.angle += Math.PI*2
+                        enemyAngle.angle += Math.PI*2                    
                     }
-                    console.log(enemyAngle.angle * 180/Math.PI);
+                    
+                    
+                     switch(enemies[i].type){
+                           case 1:
+                                var myAngle=0, deltaAngle=0;
+                             
+                                myAngle = Math.atan2(enemies[i].DeltaY, enemies[i].DeltaX ); 
+                                deltaAngle = Math.max(Math.min((enemyAngle.angle - myAngle), .3)-.3);
+                                console.log(deltaAngle);
+                                myAngle = myAngle + deltaAngle;
+                                console.log(myAngle);
+                                 enemies[i].DeltaX = Math.cos(myAngle)*200;
+                                enemies[i].DeltaY = Math.sin(myAngle)*200;
+                             
+                                enemyAngle.angle = Math.atan2(enemies[i].DeltaY, enemies[i].DeltaX);
+                                if(enemyAngle.angle < 0){//edit angle for matchmaking
+                                    enemyAngle.angle += Math.PI*2                    
+                                }
+                                break;
+                           case 2:
+                               
+                               break;
+                           default:
+                             
+                               break;
+                       }
+                                       
+                    
+                    
                     if( timeLeft > 0){//if we are swinging
                         var anglediff = Math.abs(enemyAngle.angle - swordAngle) * 180/Math.PI;
                         if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
@@ -297,6 +377,8 @@
 <body>
     <img src="CharacterV2.png" id="player">
     <img src="AngeryBoi.png" id="Blob">
+    <img src="RedBoi.png" id="RedBlob">
+    <img src="BluBoi.png" id="BluBlob">
     <canvas id="canvas" width="1024" height="768"></canvas>  
 	
     <footer>
