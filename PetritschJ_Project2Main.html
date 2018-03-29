@@ -71,7 +71,10 @@
             y:100,
             img: undefined,
             animations: [],
-            currentAnimation: undefined
+            currentAnimation: undefined,
+            score:0,
+            tempScore:0,
+            comboMulti:0
         };
         var enemies = [];
         var mouse = {
@@ -209,7 +212,8 @@
         
         function updateEnemies(){
             var toDelete = -1;
-            while(enemies.length < 3){
+            var maxEnemies =Math.min( Math.max(Math.sqrt(player.score), 3), 7);            
+            while(enemies.length < maxEnemies){
                 var temp ={
                     x : Math.random() * 1024,
                     y : Math.random() * 768,
@@ -253,7 +257,7 @@
                 
                 Determinator = Math.random()*3;//Determine enemy Type
                 Determinator = Math.trunc(Determinator);
-                switch(Determinator){                  
+                switch(Determinator){ //Switch between sprites                 
                     case 1:                       
                         temp.img = document.getElementById("BluBlob")
                         temp.type = 1;
@@ -270,11 +274,12 @@
                 
                 
                 
-                console.dir(temp);
+               
                 enemies.push(temp);
             }
+          
             
-            for(var i =0; i < 3; i++){
+            for(var i =0; i < maxEnemies; i++){
                 if(enemies[i].x < 0 || enemies[i].x > 1024 || enemies[i].y < 0 || enemies[i].y > 768){//if we go off screen, delete this next frame
                     toDelete = i;
                 }
@@ -290,18 +295,15 @@
                     
                     
                      switch(enemies[i].type){
-                           case 1:
-                                var myAngle=0, deltaAngle=0;
+                           case 1:                          
+                           
+                                var myAngle=0, deltaAngle=0;                                
+                                deltaAngle = (enemyAngle.angle - myAngle);  
+                                                                
+                                enemyAngle.angle = myAngle + deltaAngle;                                 
+                                enemies[i].DeltaX = Math.cos(enemyAngle.angle)*200;
+                                enemies[i].DeltaY = Math.sin(enemyAngle.angle)*200;
                              
-                                myAngle = Math.atan2(enemies[i].DeltaY, enemies[i].DeltaX ); 
-                                deltaAngle = Math.max(Math.min((enemyAngle.angle - myAngle), .3)-.3);
-                                console.log(deltaAngle);
-                                myAngle = myAngle + deltaAngle;
-                                console.log(myAngle);
-                                 enemies[i].DeltaX = Math.cos(myAngle)*200;
-                                enemies[i].DeltaY = Math.sin(myAngle)*200;
-                             
-                                enemyAngle.angle = Math.atan2(enemies[i].DeltaY, enemies[i].DeltaX);
                                 if(enemyAngle.angle < 0){//edit angle for matchmaking
                                     enemyAngle.angle += Math.PI*2                    
                                 }
@@ -320,7 +322,17 @@
                         var anglediff = Math.abs(enemyAngle.angle - swordAngle) * 180/Math.PI;
                         if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
                             toDelete =i;
+                            player.tempScore+=enemies[i].type;
+                            player.comboMulti+=1;
                         }
+                    }
+                    else if (player.tempScore> 0){//when our swing is done
+                        player.score += (player.tempScore* player.comboMulti);
+                        console.log(player.tempScore + " * " + player.comboMulti);   
+                        player.tempScore= 0;
+                        console.log(player.score);
+                        player.comboMulti =0;
+                        
                     }
                     enemies[i].x += enemies[i].DeltaX*dt;
                     enemies[i].y += enemies[i].DeltaY*dt;
