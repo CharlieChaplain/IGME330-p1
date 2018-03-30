@@ -57,9 +57,7 @@
     // PROGRAMMED BY Joel Petritsch AND Stephen Callen
 	// An IIFE ("Iffy") - see the notes in mycourses
 	(function(){
-		"use strict";	
-		
-
+		"use strict";
 		var canvas,ctx;     
         var timeLeft=0;
         var lastTime = 0; //used by calculateDeltaTime
@@ -70,18 +68,22 @@
             x:100,
             y:100,
             img: undefined,
-            animations: [],
+            animations: [],            
             currentAnimation: undefined,
             score:0,
             tempScore:0,
-            comboMulti:0
+            comboMulti:0,
+            state: 0,
+            OOFtimer: 0
+            
         };
+        var toRemoveArray= [];
         var enemies = [];
         var mouse = {
             x:undefined,
             y:undefined
         }
-         var movementVector = {
+        var movementVector = {
             x:undefined,
             y:undefined
         }
@@ -109,7 +111,6 @@
         Animation.prototype.drawAnimation = function(ctx, x, y){
             ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
         }
-        
         function doMouseMove(e){        
             mouse.x = e.pageX - e.target.offsetLeft;
             mouse.y = e.pageY - e.target.offsetTop;
@@ -119,8 +120,6 @@
              timeLeft = 1;
             }
         }
-   
-        
 		function init(){
 			// set up canvas stuff
 			canvas = document.querySelector('canvas');
@@ -138,26 +137,29 @@
            
             
 		}
-		
-		
-	   
-		
-		
-		
 		function update() { 
 			// this schedules a call to the update() method in 1/60 seconds
             dt = calculateDeltaTime();
-            ctx.fillRect(0,0,1024,768)
+            
+            ctx.fillRect(0,0,1024,768);
 			
             
             movePlayer();
             updateEnemies()
-			requestAnimationFrame(update);            
+			requestAnimationFrame(update);     
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = "24px verdana";
+            ctx.fillText(player.score,850, 750,)
+            
+            
+            ctx.restore();
            
 			
 		}
         function movePlayer(){     
-            if(timeLeft ==0){//if we can move, move
+            console.log(player.state);
+            if(timeLeft ==0 && player.state == 0){//if we can move, move
                 
                 movementVector.x = mouse.x - player.x;
                 movementVector.y = mouse.y - player.y;
@@ -173,6 +175,16 @@
                 if(Math.abs(movementVector.y)> 26){// if we are more than like, 3 pixels away
                     player.y = player.y +  dt*movementVector.y*300/magnitude;//Move player normalized distance
                 }                
+            }
+            else if(player.state == 1){//OOF
+                player.OOFtimer -= dt;
+                if (player.OOFtimer <= 0){
+                    player.state = 0;
+                }
+                
+            }
+            else if(player.state !=0){//DED
+                console.log("YOU ARE DED");
             }
             else{//otherwise, just swing the weapon.
             timeLeft-= dt;
@@ -209,9 +221,8 @@
             ctx.restore();
                 
         }
-        
         function updateEnemies(){
-            var toDelete = -1;
+           
             var maxEnemies =Math.min( Math.max(Math.sqrt(player.score), 3), 7);            
             while(enemies.length < maxEnemies){
                 var temp ={
@@ -266,22 +277,18 @@
                         temp.img = document.getElementById("RedBlob")
                         temp.type = 2;
                         break;
-                    default:                      
+                    default:
+                        temp.type = 0;
                         break;
                 }
                 
-                
-                
-                
-                
-               
                 enemies.push(temp);
             }
           
             
             for(var i =0; i < maxEnemies; i++){
                 if(enemies[i].x < 0 || enemies[i].x > 1024 || enemies[i].y < 0 || enemies[i].y > 768){//if we go off screen, delete this next frame
-                    toDelete = i;
+                   toRemoveArray.unshift(i);
                 }
                 else{//if we are still on screen
                     var enemyAngle = {x:0,y:0,magnitude:0,angle:0};
@@ -301,8 +308,8 @@
                                 deltaAngle = (enemyAngle.angle - myAngle);  
                                                                 
                                 enemyAngle.angle = myAngle + deltaAngle;                                 
-                                enemies[i].DeltaX = Math.cos(enemyAngle.angle)*200;
-                                enemies[i].DeltaY = Math.sin(enemyAngle.angle)*200;
+                                enemies[i].DeltaX = Math.cos(enemyAngle.angle)*150;
+                                enemies[i].DeltaY = Math.sin(enemyAngle.angle)*150;
                              
                                 if(enemyAngle.angle < 0){//edit angle for matchmaking
                                     enemyAngle.angle += Math.PI*2                    
@@ -315,22 +322,32 @@
                              
                                break;
                        }
-                                       
+                    if(enemyAngle.magnitude < 20){
+                        if(enemies[i].type == 0){
+                            player.state= 1;
+                            player.OOFtimer = .5;
+                        }
+                        else{
+                            player.state=2;//DED
+                        }
+                    }
+                    
+                    
                     
                     
                     if( timeLeft > 0){//if we are swinging
                         var anglediff = Math.abs(enemyAngle.angle - swordAngle) * 180/Math.PI;
                         if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
-                            toDelete =i;
+                            toRemoveArray.unshift(i);
                             player.tempScore+=enemies[i].type;
                             player.comboMulti+=1;
                         }
                     }
                     else if (player.tempScore> 0){//when our swing is done
                         player.score += (player.tempScore* player.comboMulti);
-                        console.log(player.tempScore + " * " + player.comboMulti);   
+                        //console.log(player.tempScore + " * " + player.comboMulti);   
                         player.tempScore= 0;
-                        console.log(player.score);
+                        //console.log(player.score);
                         player.comboMulti =0;
                         
                     }
@@ -342,13 +359,13 @@
                 ctx.drawImage(enemies[i].img, enemies[i].x, enemies[i].y)
                 ctx.restore();
             }               
-            if(toDelete != -1){
-                enemies.splice(toDelete, 1);
+            while(toRemoveArray.length > 0){
+                enemies.splice(toRemoveArray[0], 1);
+                toRemoveArray.splice(0,1);
             }
             
             
         }
-        
 		
 		// HELPERS
 		function makeColor(red, green, blue, alpha){
