@@ -11,7 +11,7 @@
             margin: 0;
             color: #aab;
         }
-        canvas {
+        this.canvas {
             margin: auto;
             margin-top: 20px;
             margin-bottom: 20px;
@@ -55,352 +55,378 @@
 	</style>
 	<script>
     // PROGRAMMED BY Joel Petritsch AND Stephen Callen
-	// An IIFE ("Iffy") - see the notes in mycourses
-	(function(){
-		"use strict";
-		var canvas,ctx;     
-        var timeLeft=0;
-        var lastTime = 0; //used by calculateDeltaTime
-        var dt;
-        var angle =0;
-        var swordAngle;
-        var player = {
-            x:100,
-            y:100,
-            img: undefined,
-            animations: [],            
-            currentAnimation: undefined,
-            score:0,
-            tempScore:0,
-            comboMulti:0,
-            state: 0,
-            OOFtimer: 0
+        "use strict";
+        
+        var app = app || {};
+
+		app.main = {
+            animation: undefined, //required: loaded by this script
+            canvas: undefined,
+            ctx: undefined,     
+            timeLeft: 0,
+            lastTime: 0, //used by calculateDeltaTime
+            dt: 0,
+            angle: 0,
+            swordAngle: undefined,
+            animationID: 0,
+            player: {
+                x:100,
+                y:100,
+                img: undefined,
+                animations: [],            
+                currentAnimation: undefined,
+                score:0,
+                tempScore:0,
+                comboMulti:0,
+                state: 0,
+                OOFtimer: 0
+            },
+            GAME_STATES: Object.freeze({
+                TITLE: 0,
+                GAME: 1,
+                PAUSE: 2,
+                GAMEOVER: 3
+            }),
+            gameState: undefined,
+            toRemoveArray: [],
+            enemies: [],
+            mouse: {
+                x:undefined,
+                y:undefined
+            },
+            movementVector: {
+                x:undefined,
+                y:undefined
+            },
             
-        };
-        var toRemoveArray= [];
-        var enemies = [];
-        var mouse = {
-            x:undefined,
-            y:undefined
-        }
-        var movementVector = {
-            x:undefined,
-            y:undefined
-        }
-        function Animation(image, numFrames, secondsPerFrame, frameWidth, frameHeight){
-            this.image = image;
-            this.numFrames = numFrames;
-            this.spf = secondsPerFrame;
-            this.width = frameWidth;
-            this.height = frameHeight;
-            this.currentFrame = 0;
-            this.animTimer = 0;
-        }
-        Animation.prototype.updateAnimation = function(){
-            this.animTimer += dt;
-            if(this.animTimer >= this.spf){
-                this.animTimer = 0;
-                if(this.currentFrame >= this.numFrames - 1){
-                    this.currentFrame = 0;
+            doMouseMove: function(e){        
+                this.mouse.x = e.pageX - e.target.offsetLeft;
+                this.mouse.y = e.pageY - e.target.offsetTop;
+            },
+            doMouseDown: function(e){ 
+                if(this.gameState == this.GAME_STATES.TITLE){
+                    this.gameState = this.GAME_STATES.GAME;
                 }
-                else{
-                    this.currentFrame++;
+                else if(this.gameState == this.GAME_STATES.GAME){
+                    if(this.timeLeft==0){
+                    this.timeLeft = 1;
                 }
-            }
-        }
-        Animation.prototype.drawAnimation = function(ctx, x, y){
-            ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
-        }
-        function doMouseMove(e){        
-            mouse.x = e.pageX - e.target.offsetLeft;
-            mouse.y = e.pageY - e.target.offsetTop;
-        }
-        function doMouseDown(e){        
-            if(timeLeft==0){
-             timeLeft = 1;
-            }
-        }
-		function init(){
-			// set up canvas stuff
-			canvas = document.querySelector('canvas');
-			ctx = canvas.getContext("2d");	
-			
-            player.img = document.getElementById("player");
-            var walkAnim = new Animation(player.img, 4, 0.25, 46, 46);
-            player.animations.push(walkAnim);
-            player.currentAnimation = player.animations[0];
-            
-			// start animation loop
-			update();
-            canvas.onmousemove = doMouseMove;
-            canvas.onmousedown = doMouseDown;
-           
-            
-		}
-		function update() { 
-			// this schedules a call to the update() method in 1/60 seconds
-            dt = calculateDeltaTime();
-            
-            ctx.fillRect(0,0,1024,768);
-			
-            
-            movePlayer();
-            updateEnemies()
-			requestAnimationFrame(update);     
-            ctx.save();
-            ctx.fillStyle = "white";
-            ctx.font = "24px verdana";
-            ctx.fillText(player.score,850, 750,)
-            
-            
-            ctx.restore();
-           
-			
-		}
-        function movePlayer(){     
-            console.log(player.state);
-            if(timeLeft ==0 && player.state == 0){//if we can move, move
-                
-                movementVector.x = mouse.x - player.x;
-                movementVector.y = mouse.y - player.y;
-                var magnitude = (movementVector.x * movementVector.x) + (movementVector.y * movementVector.y);
-                magnitude = Math.sqrt(magnitude);//always move a specific speed
-                
-                angle = Math.atan2(movementVector.y, movementVector.x)
-              
-                
-                if(Math.abs(movementVector.x)> 26){// if we are more than like, 3 pixels away
-                    player.x = player.x + dt*movementVector.x*300/magnitude;//actually move player
                 }
-                if(Math.abs(movementVector.y)> 26){// if we are more than like, 3 pixels away
-                    player.y = player.y +  dt*movementVector.y*300/magnitude;//Move player normalized distance
-                }                
-            }
-            else if(player.state == 1){//OOF
-                player.OOFtimer -= dt;
-                if (player.OOFtimer <= 0){
-                    player.state = 0;
+                else if(this.gameState == this.GAME_STATES.GAMEOVER){
+                    this.gameState = this.GAME_STATES.TITLE;
                 }
                 
-            }
-            else if(player.state !=0){//DED
-                console.log("YOU ARE DED");
-            }
-            else{//otherwise, just swing the weapon.
-            timeLeft-= dt;
-                if(timeLeft < 0){
-                    timeLeft = 0;
-                }
-            }
-            
-           
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(angle);
-            ctx.translate(-13, -26); 
-            player.currentAnimation.updateAnimation();
-            player.currentAnimation.drawAnimation(ctx, 0, 0);  
-            ctx.translate(13, 26);
-            if(timeLeft>0){       
-                swordAngle = angle + ((-1+timeLeft) * Math.PI) ;
-                if(swordAngle< 0){
-                        swordAngle+= Math.PI*2//0 is straight down
-                    }
-                swordAngle -= Math.PI/2;//update sword for collisions
-                if(swordAngle< 0){
-                        swordAngle+= Math.PI*2//0 is straight down
-                    }
-               
-                ctx.rotate(((-1+timeLeft) * Math.PI));               
-            }
-            ctx.beginPath();            
-            ctx.strokeStyle = "red";
-            ctx.moveTo(0,0);
-            ctx.lineTo(0,100);
-            ctx.stroke();
-            ctx.restore();
                 
-        }
-        function updateEnemies(){
-           
-            var maxEnemies =Math.min( Math.max(Math.sqrt(player.score), 3), 7);            
-            while(enemies.length < maxEnemies){
-                var temp ={
-                    x : Math.random() * 1024,
-                    y : Math.random() * 768,
-                    DeltaX : (Math.random()-.5) * 600,
-                    DeltaY : (Math.random()-.5) * 600, 
-                    img : document.getElementById("Blob"),
-                    type : 0,
-                    radius: 16
-                    
-                }
-                var Determinator = Math.random()*4;
-                Determinator = Math.trunc(Determinator);// Determine Spawn Location
-                switch(Determinator){
-                    case 1:
-                        temp.x =0;
-                        if(temp.DeltaX < 0){
-                            temp.DeltaX *=-1;
-                        }
-                        break;
-                    case 2:
-                        temp.x=1024;
-                        if(temp.DeltaX > 0){
-                            temp.DeltaX *=-1;
-                        }
-                        temp.img = document.getElementById("BluBlob")
-                        break;
-                    case 3:
-                        temp.y=0;
-                         if(temp.DeltaY < 0){
-                            temp.DeltaY*=-1;
-                        }
-                         temp.img = document.getElementById("RedBlob")
-                        break;
-                    default:
-                        if(temp.DeltaY > 0){
-                            temp.DeltaY*=-1;
-                        }
-                        temp.y = 768;
-                        break;
-                }
+            },
+            init: function(){
+                // set up canvas stuff
+                this.canvas = document.querySelector('canvas');
+                this.ctx = this.canvas.getContext("2d");
                 
-                Determinator = Math.random()*3;//Determine enemy Type
-                Determinator = Math.trunc(Determinator);
-                switch(Determinator){ //Switch between sprites                 
-                    case 1:                       
-                        temp.img = document.getElementById("BluBlob")
-                        temp.type = 1;
-                        break;
-                    case 2:
-                        temp.img = document.getElementById("RedBlob")
-                        temp.type = 2;
-                        break;
-                    default:
-                        temp.type = 0;
-                        break;
-                }
-                
-                enemies.push(temp);
-            }
-          
-            
-            for(var i =0; i < maxEnemies; i++){
-                if(enemies[i].x < 0 || enemies[i].x > 1024 || enemies[i].y < 0 || enemies[i].y > 768){//if we go off screen, delete this next frame
-                   toRemoveArray.unshift(i);
-                }
-                else{//if we are still on screen
-                    var enemyAngle = {x:0,y:0,magnitude:0,angle:0};
-                    enemyAngle.x= player.x - enemies[i].x;
-                    enemyAngle.y = player.y - enemies[i].y;
-                    enemyAngle.magnitude = Math.sqrt((enemyAngle.x* enemyAngle.x) + (enemyAngle.y * enemyAngle.y));
-                    enemyAngle.angle = Math.atan2(enemyAngle.y, enemyAngle.x);
-                    if(enemyAngle.angle < 0){//edit angle for matchmaking
-                        enemyAngle.angle += Math.PI*2                    
-                    }
-                    
-                    
-                     switch(enemies[i].type){
-                           case 1:                          
-                           
-                                var myAngle=0, deltaAngle=0;                                
-                                deltaAngle = (enemyAngle.angle - myAngle);  
-                                                                
-                                enemyAngle.angle = myAngle + deltaAngle;                                 
-                                enemies[i].DeltaX = Math.cos(enemyAngle.angle)*150;
-                                enemies[i].DeltaY = Math.sin(enemyAngle.angle)*150;
-                             
-                                if(enemyAngle.angle < 0){//edit angle for matchmaking
-                                    enemyAngle.angle += Math.PI*2                    
-                                }
-                                break;
-                           case 2:
-                               
-                               break;
-                           default:
-                             
-                               break;
-                       }
-                    if(enemyAngle.magnitude < 20){
-                        if(enemies[i].type == 0){
-                            player.state= 1;
-                            player.OOFtimer = .5;
+                //sets up animation stuff
+                this.Animation.prototype.updateAnimation = function(dt){
+                    this.animTimer += dt;
+                    if(this.animTimer >= this.spf){
+                        this.animTimer = 0;
+                        if(this.currentFrame >= this.numFrames - 1){
+                            this.currentFrame = 0;
                         }
                         else{
-                            player.state=2;//DED
+                            this.currentFrame++;
                         }
                     }
-                    
-                    
-                    
-                    
-                    if( timeLeft > 0){//if we are swinging
-                        var anglediff = Math.abs(enemyAngle.angle - swordAngle) * 180/Math.PI;
-                        if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
-                            toRemoveArray.unshift(i);
-                            player.tempScore+=enemies[i].type;
-                            player.comboMulti+=1;
-                        }
-                    }
-                    else if (player.tempScore> 0){//when our swing is done
-                        player.score += (player.tempScore* player.comboMulti);
-                        //console.log(player.tempScore + " * " + player.comboMulti);   
-                        player.tempScore= 0;
-                        //console.log(player.score);
-                        player.comboMulti =0;
-                        
-                    }
-                    enemies[i].x += enemies[i].DeltaX*dt;
-                    enemies[i].y += enemies[i].DeltaY*dt;
                 }
-                ctx.save();
-                ctx.translate(-19,-17)
-                ctx.drawImage(enemies[i].img, enemies[i].x, enemies[i].y)
-                ctx.restore();
-            }               
-            while(toRemoveArray.length > 0){
-                enemies.splice(toRemoveArray[0], 1);
-                toRemoveArray.splice(0,1);
-            }
+
+                this.Animation.prototype.drawAnimation = function(ctx, x, y){
+                    ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
+                }
+                
+                this.player.img = document.getElementById("player");
+                var walkAnim = new this.Animation(this.player.img, 4, 0.25, 46, 46);
+                this.player.animations.push(walkAnim);
+                this.player.currentAnimation = this.player.animations[0];
+                
+                this.gameState = this.GAME_STATES.TITLE;
+                
+                this.canvas.onmousemove = this.doMouseMove.bind(this);
+                this.canvas.onmousedown = this.doMouseDown.bind(this);
+                
+                // start animation loop
+                this.update();
+                
+
+
+            },
+            update: function() { 
+                // this schedules a call to the update() method in 1/60 seconds
+                this.dt = calculateDeltaTime();
+
+                this.ctx.fillRect(0,0,1024,768);
+                
+                if(this.gameState == this.GAME_STATES.TITLE){
+                    this.ctx.save();
+                    this.ctx.font = "30px Verdana";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText("CLICK TO START", this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.restore();
+                    //resets the game
+                    this.player.state = 0;
+                    this.enemies = [];
+                }
+                if(this.gameState == this.GAME_STATES.GAME){
+                    this.movePlayer();
+                    this.updateEnemies();
+                     
+                }
+                if(this.gameState == this.GAME_STATES.GAMEOVER){
+                    this.ctx.save();
+                    this.ctx.font = "30px Verdana";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.fillText("click to retry", this.canvas.width / 2, this.canvas.height / 2 + 30);
+                    this.ctx.restore();
+                }
+                //THIS IS THE UPDATE METHOD. IMPORTANT
+                this.animationID = requestAnimationFrame(this.update.bind(this));
+                
+                this.ctx.save();
+                this.ctx.fillStyle = "white";
+                this.ctx.font = "24px Verdana";
+                this.ctx.fillText(this.player.score, 850, 750,);
+
+                this.ctx.restore();
+            },
+            movePlayer: function(){     
+                //console.log(this.player.state);
+                if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move
+
+                    this.movementVector.x = this.mouse.x - this.player.x;
+                    this.movementVector.y = this.mouse.y - this.player.y;
+                    var magnitude = (this.movementVector.x * this.movementVector.x) + (this.movementVector.y * this.movementVector.y);
+                    magnitude = Math.sqrt(magnitude);//always move a specific speed
+
+                    this.angle = Math.atan2(this.movementVector.y, this.movementVector.x)
+
+
+                    if(Math.abs(this.movementVector.x)> 26){// if we are more than like, 3 pixels away
+                        this.player.x = this.player.x + this.dt*this.movementVector.x*300/magnitude;//actually move this.player
+                    }
+                    if(Math.abs(this.movementVector.y)> 26){// if we are more than like, 3 pixels away
+                        this.player.y = this.player.y +  this.dt*this.movementVector.y*300/magnitude;//Move this.player normalized distance
+                    }                
+                }
+                else if(this.player.state == 1){//OOF
+                    this.player.OOFtimer -= this.dt;
+                    if (this.player.OOFtimer <= 0){
+                        this.player.state = 0;
+                    }
+
+                }
+                else if(this.player.state !=0){//DED
+                    this.gameState = this.GAME_STATES.GAMEOVER;
+                }
+                else{//otherwise, just swing the weapon.
+                this.timeLeft-= this.dt;
+                    if(this.timeLeft < 0){
+                        this.timeLeft = 0;
+                    }
+                }
+
+
+                this.ctx.save();
+                this.ctx.translate(this.player.x, this.player.y);
+                this.ctx.rotate(this.angle);
+                this.ctx.translate(-13, -26); 
+                this.player.currentAnimation.updateAnimation();
+                this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);  
+                this.ctx.translate(13, 26);
+                if(this.timeLeft>0){       
+                    this.swordAngle = this.angle + ((-1+this.timeLeft) * Math.PI) ;
+                    if(this.swordAngle< 0){
+                            this.swordAngle+= Math.PI*2//0 is straight down
+                        }
+                    this.swordAngle -= Math.PI/2;//update sword for collisions
+                    if(this.swordAngle< 0){
+                            this.swordAngle+= Math.PI*2//0 is straight down
+                        }
+
+                    this.ctx.rotate(((-1+this.timeLeft) * Math.PI));               
+                }
+                this.ctx.beginPath();            
+                this.ctx.strokeStyle = "red";
+                this.ctx.moveTo(0,0);
+                this.ctx.lineTo(0,100);
+                this.ctx.stroke();
+                this.ctx.restore();
+
+            },
+            updateEnemies: function(){
+
+                var maxEnemies =Math.min( Math.max(Math.sqrt(this.player.score), 3), 7);            
+                while(this.enemies.length < maxEnemies){
+                    var temp ={
+                        x : Math.random() * 1024,
+                        y : Math.random() * 768,
+                        DeltaX : (Math.random()-.5) * 600,
+                        DeltaY : (Math.random()-.5) * 600, 
+                        img : document.getElementById("Blob"),
+                        type : 0,
+                        radius: 16
+
+                    }
+                    var Determinator = Math.random()*4;
+                    Determinator = Math.trunc(Determinator);// Determine Spawn Location
+                    switch(Determinator){
+                        case 1:
+                            temp.x =0;
+                            if(temp.DeltaX < 0){
+                                temp.DeltaX *=-1;
+                            }
+                            break;
+                        case 2:
+                            temp.x=1024;
+                            if(temp.DeltaX > 0){
+                                temp.DeltaX *=-1;
+                            }
+                            temp.img = document.getElementById("BluBlob")
+                            break;
+                        case 3:
+                            temp.y=0;
+                             if(temp.DeltaY < 0){
+                                temp.DeltaY*=-1;
+                            }
+                             temp.img = document.getElementById("RedBlob")
+                            break;
+                        default:
+                            if(temp.DeltaY > 0){
+                                temp.DeltaY*=-1;
+                            }
+                            temp.y = 768;
+                            break;
+                    }
+
+                    Determinator = Math.random()*3;//Determine enemy Type
+                    Determinator = Math.trunc(Determinator);
+                    switch(Determinator){ //Switch between sprites                 
+                        case 1:                       
+                            temp.img = document.getElementById("BluBlob")
+                            temp.type = 1;
+                            break;
+                        case 2:
+                            temp.img = document.getElementById("RedBlob")
+                            temp.type = 2;
+                            break;
+                        default:
+                            temp.type = 0;
+                            break;
+                    }
+
+                    this.enemies.push(temp);
+                }
+
+
+                for(var i =0; i < maxEnemies; i++){
+                    if(this.enemies[i].x < 0 || this.enemies[i].x > 1024 || this.enemies[i].y < 0 || this.enemies[i].y > 768){//if we go off screen, delete this next frame
+                       this.toRemoveArray.unshift(i);
+                    }
+                    else{//if we are still on screen
+                        var enemyAngle = {x:0,y:0,magnitude:0,angle:0};
+                        enemyAngle.x= this.player.x - this.enemies[i].x;
+                        enemyAngle.y = this.player.y - this.enemies[i].y;
+                        enemyAngle.magnitude = Math.sqrt((enemyAngle.x* enemyAngle.x) + (enemyAngle.y * enemyAngle.y));
+                        enemyAngle.angle = Math.atan2(enemyAngle.y, enemyAngle.x);
+                        if(enemyAngle.angle < 0){//edit angle for matchmaking
+                            enemyAngle.angle += Math.PI*2                    
+                        }
+
+
+                         switch(this.enemies[i].type){
+                               case 1:                          
+
+                                    var myAngle=0, deltaAngle=0;                                
+                                    deltaAngle = (enemyAngle.angle - myAngle);  
+
+                                    enemyAngle.angle = myAngle + deltaAngle;                                 
+                                    this.enemies[i].DeltaX = Math.cos(enemyAngle.angle)*150;
+                                    this.enemies[i].DeltaY = Math.sin(enemyAngle.angle)*150;
+
+                                    if(enemyAngle.angle < 0){//edit angle for matchmaking
+                                        enemyAngle.angle += Math.PI*2                    
+                                    }
+                                    break;
+                               case 2:
+
+                                   break;
+                               default:
+
+                                   break;
+                           }
+                        if(enemyAngle.magnitude < 20){
+                            if(this.enemies[i].type == 0){
+                                this.player.state= 1;
+                                this.player.OOFtimer = .5;
+                            }
+                            else{
+                                this.player.state=2;//DED
+                            }
+                        }
+
+
+
+
+                        if( this.timeLeft > 0){//if we are swinging
+                            var anglediff = Math.abs(enemyAngle.angle - this.swordAngle) * 180/Math.PI;
+                            if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
+                                this.toRemoveArray.unshift(i);
+                                this.player.tempScore+=this.enemies[i].type;
+                                this.player.comboMulti+=1;
+                            }
+                        }
+                        else if (this.player.tempScore> 0){//when our swing is done
+                            this.player.score += (this.player.tempScore* this.player.comboMulti);
+                            //console.log(this.player.tempScore + " * " + this.player.comboMulti);   
+                            this.player.tempScore= 0;
+                            //console.log(this.player.score);
+                            this.player.comboMulti =0;
+
+                        }
+                        this.enemies[i].x += this.enemies[i].DeltaX*this.dt;
+                        this.enemies[i].y += this.enemies[i].DeltaY*this.dt;
+                    }
+                    this.ctx.save();
+                    this.ctx.translate(-19,-17)
+                    this.ctx.drawImage(this.enemies[i].img, this.enemies[i].x, this.enemies[i].y)
+                    this.ctx.restore();
+                }               
+                while(this.toRemoveArray.length > 0){
+                    this.enemies.splice(this.toRemoveArray[0], 1);
+                    this.toRemoveArray.splice(0,1);
+                }
+
+
+            },
             
+            Animation: function(image, numFrames, secondsPerFrame, frameWidth, frameHeight){
+                this.image = image;
+                this.numFrames = numFrames;
+                this.spf = secondsPerFrame;
+                this.width = frameWidth;
+                this.height = frameHeight;
+                this.currentFrame = 0;
+                this.animTimer = 0;
+            }
             
         }
 		
-		// HELPERS
-		function makeColor(red, green, blue, alpha){
-   			var color='rgba('+red+','+green+','+blue+', '+alpha+')';
-   			return color;
-		}
-        function calculateDeltaTime(){
-            var now,fps;
-            now = performance.now(); 
-            fps = 1000 / (now - lastTime);
-            fps = clamp(fps, 12, 60);
-            lastTime = now; 
-            return 1/fps;
-	    }        
-        function clamp(val, min, max){
-	        return Math.max(min, Math.min(max, val));
-        }       
-      
-		 // FULL SCREEN MODE
-		function requestFullscreen(element) {
-			if (element.requestFullscreen) {
-			  element.requestFullscreen();
-			} else if (element.mozRequestFullscreen) {
-			  element.mozRequestFullscreen();
-			} else if (element.mozRequestFullScreen) { // camel-cased 'S' was changed to 's' in spec
-			  element.mozRequestFullScreen();
-			} else if (element.webkitRequestFullscreen) {
-			  element.webkitRequestFullscreen();
-			}
-			// .. and do nothing if the method is not supported
-		};
-		
-		window.addEventListener("load",init);
-    }());
-		
+		window.onload = function(){
+            console.log("window.onload called");
+            //app.main.animation = app.animation;
+            app.main.init();
+        }
 	</script>
 </head>
 <body>
@@ -408,8 +434,10 @@
     <img src="AngeryBoi.png" id="Blob">
     <img src="RedBoi.png" id="RedBlob">
     <img src="BluBoi.png" id="BluBlob">
-    <canvas id="canvas" width="1024" height="768"></canvas>  
-	
+    <canvas id="canvas" width="1024" height="768"><canvas>  
+	<script src='animation.js'></script>
+    <script src='utilities.js'></script>
+    
     <footer>
         <p>Joel Petritsch, Stephen Callen | 2018</p>        
     </footer>
