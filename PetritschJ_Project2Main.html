@@ -170,7 +170,7 @@
                 if(this.gameState == this.GAME_STATES.GAME){
                     if(!this.paused){
                         this.movePlayer();
-                        //this.updateEnemies();
+                        this.updateEnemies();
                     }
                     else {
                         this.ctx.save();
@@ -255,22 +255,29 @@
                     this.player.facingLeft = false;
                 }
                 
+                //transforms to proper spot to draw directional arrow
+                this.ctx.save();
+                this.ctx.translate(30, 45);
+                this.ctx.rotate(this.angle);
+                this.ctx.translate(40, -10);
+                var arrowImg = document.getElementById("arrow");
+                this.ctx.drawImage(arrowImg,0,0,8,10,0,0,16,20);
+                this.ctx.restore();
                 
                 this.checkPlayerAnimation();
                 this.player.currentAnimation.updateAnimation(this.dt);
                 if(!this.player.facingLeft){
                     this.ctx.save();
                     this.ctx.scale(-1, 1);
-                    this.ctx.translate(-60, 0);
+                    this.ctx.translate(-60, 0); //accounts for the change in x from flipping the image
                     this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);
                     this.ctx.restore();
                 }
                 else{
                     this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);
                 }
-                
+                //translates to the proper spot to draw the sword
                 this.ctx.translate(30, 45);
-                
                 this.ctx.rotate(this.angle);
                 
                 if(this.timeLeft>0){       
@@ -479,6 +486,7 @@
     <img src="AngeryBoi.png" id="Blob">
     <img src="RedBoi.png" id="RedBlob">
     <img src="BluBoi.png" id="BluBlob">
+    <img src="arrow.png" id="arrow">
     <canvas id="canvas" width="1024" height="768"><canvas>  
 	<script src='animation.js'></script>
     <script src='utilities.js'></script>
