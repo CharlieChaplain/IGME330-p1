@@ -80,7 +80,9 @@
                 tempScore:0,
                 comboMulti:0,
                 state: 0,
-                OOFtimer: 0
+                OOFtimer: 0,
+                moving: false,
+                facingLeft: true
             },
             GAME_STATES: Object.freeze({
                 TITLE: 0,
@@ -123,27 +125,15 @@
                 this.canvas = document.querySelector('canvas');
                 this.ctx = this.canvas.getContext("2d");
                 
-                //sets up animation stuff
-                /*
-                this.Animation.prototype.updateAnimation = function(dt){
-                    this.animTimer += dt;
-                    if(this.animTimer >= this.spf){
-                        this.animTimer = 0;
-                        if(this.currentFrame >= this.numFrames - 1){
-                            this.currentFrame = 0;
-                        }
-                        else{
-                            this.currentFrame++;
-                        }
-                    }
-                }
+                this.ctx.mozImageSmoothingEnabled = false;
+                this.ctx.webkitImageSmoothingEnabled = false;
+                this.ctx.msImageSmoothingEnabled = false;
+                this.ctx.imageSmoothingEnabled = false;
                 
-                this.Animation.prototype.drawAnimation = function(ctx, x, y){
-                    ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
-                }
-                */
                 this.player.img = document.getElementById("player");
-                var walkAnim = new this.animation.Animation(this.player.img, 4, 0.25, 46, 46);
+                var walkAnim = new this.animation.Animation(this.player.img, 6, 0.05, 30, 30, 1, 2);
+                var idleAnim = new this.animation.Animation(this.player.img, 1, 0.05, 30, 30, 0, 2);
+                this.player.animations.push(idleAnim);
                 this.player.animations.push(walkAnim);
                 this.player.currentAnimation = this.player.animations[0];
                 
@@ -180,7 +170,7 @@
                 if(this.gameState == this.GAME_STATES.GAME){
                     if(!this.paused){
                         this.movePlayer();
-                        this.updateEnemies();
+                        //this.updateEnemies();
                     }
                     else {
                         this.ctx.save();
@@ -214,6 +204,7 @@
                 this.ctx.restore();
             },
             movePlayer: function(){     
+                this.player.moving = false;
                 //console.log(this.player.state);
                 if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move
 
@@ -227,9 +218,11 @@
 
                     if(Math.abs(this.movementVector.x)> 26){// if we are more than like, 3 pixels away
                         this.player.x = this.player.x + this.dt*this.movementVector.x*300/magnitude;//actually move this.player
+                        this.player.moving = true;
                     }
                     if(Math.abs(this.movementVector.y)> 26){// if we are more than like, 3 pixels away
                         this.player.y = this.player.y +  this.dt*this.movementVector.y*300/magnitude;//Move this.player normalized distance
+                        this.player.moving = true;
                     }                
                 }
                 else if(this.player.state == 1){//OOF
@@ -252,11 +245,34 @@
 
                 this.ctx.save();
                 this.ctx.translate(this.player.x, this.player.y);
-                this.ctx.rotate(this.angle);
-                this.ctx.translate(-13, -26); 
+                this.ctx.translate(-30, -45);
+                
+                //checks if player is facing left
+                if((this.angle >= Math.PI / 2 && this.angle <= Math.PI) || (this.angle <= Math.PI / -2 && this.angle >= -Math.PI)){
+                    this.player.facingLeft = true;
+                }
+                else{
+                    this.player.facingLeft = false;
+                }
+                
+                
+                this.checkPlayerAnimation();
                 this.player.currentAnimation.updateAnimation(this.dt);
-                this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);  
-                this.ctx.translate(13, 26);
+                if(!this.player.facingLeft){
+                    this.ctx.save();
+                    this.ctx.scale(-1, 1);
+                    this.ctx.translate(-60, 0);
+                    this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);
+                    this.ctx.restore();
+                }
+                else{
+                    this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);
+                }
+                
+                this.ctx.translate(30, 45);
+                
+                this.ctx.rotate(this.angle);
+                
                 if(this.timeLeft>0){       
                     this.swordAngle = this.angle + ((-1+this.timeLeft) * Math.PI) ;
                     if(this.swordAngle< 0){
@@ -423,6 +439,17 @@
 
             },
             
+            checkPlayerAnimation: function(){
+                if(this.player.state == 0){
+                    if(this.player.moving){
+                        this.player.currentAnimation = this.player.animations[1]; //walk anim
+                    }
+                    else{
+                        this.player.currentAnimation = this.player.animations[0]; //idle anim
+                    }
+                }
+            },
+            
             //taken from boomshine exercise
             pauseGame: function(){
                 this.paused = true;
@@ -448,7 +475,7 @@
 	</script>
 </head>
 <body>
-    <img src="CharacterV2.png" id="player">
+    <img src="CharacterV3.png" id="player">
     <img src="AngeryBoi.png" id="Blob">
     <img src="RedBoi.png" id="RedBlob">
     <img src="BluBoi.png" id="BluBlob">
