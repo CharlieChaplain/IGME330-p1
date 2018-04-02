@@ -29,5 +29,10 @@ app.animation = (function(){
     Animation.prototype.drawAnimation = function(ctx, x, y){
         ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
     }
+    
+    // export a public interface to this module
+	return{
+        Animation: Animation
+    };
 }());
     

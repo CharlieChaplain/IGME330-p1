@@ -69,6 +69,7 @@
             angle: 0,
             swordAngle: undefined,
             animationID: 0,
+            paused: false,
             player: {
                 x:100,
                 y:100,
@@ -84,8 +85,7 @@
             GAME_STATES: Object.freeze({
                 TITLE: 0,
                 GAME: 1,
-                PAUSE: 2,
-                GAMEOVER: 3
+                GAMEOVER: 2
             }),
             gameState: undefined,
             toRemoveArray: [],
@@ -124,6 +124,7 @@
                 this.ctx = this.canvas.getContext("2d");
                 
                 //sets up animation stuff
+                /*
                 this.Animation.prototype.updateAnimation = function(dt){
                     this.animTimer += dt;
                     if(this.animTimer >= this.spf){
@@ -136,13 +137,13 @@
                         }
                     }
                 }
-
+                
                 this.Animation.prototype.drawAnimation = function(ctx, x, y){
                     ctx.drawImage(this.image, this.width * this.currentFrame, 0, this.width, this.height, x, y, this.width, this.height);
                 }
-                
+                */
                 this.player.img = document.getElementById("player");
-                var walkAnim = new this.Animation(this.player.img, 4, 0.25, 46, 46);
+                var walkAnim = new this.animation.Animation(this.player.img, 4, 0.25, 46, 46);
                 this.player.animations.push(walkAnim);
                 this.player.currentAnimation = this.player.animations[0];
                 
@@ -163,6 +164,7 @@
 
                 this.ctx.fillRect(0,0,1024,768);
                 
+                //big state machine checker
                 if(this.gameState == this.GAME_STATES.TITLE){
                     this.ctx.save();
                     this.ctx.font = "30px Verdana";
@@ -176,8 +178,19 @@
                     this.enemies = [];
                 }
                 if(this.gameState == this.GAME_STATES.GAME){
-                    this.movePlayer();
-                    this.updateEnemies();
+                    if(!this.paused){
+                        this.movePlayer();
+                        this.updateEnemies();
+                    }
+                    else {
+                        this.ctx.save();
+                        this.ctx.font = "30px Verdana";
+                        this.ctx.fillStyle = "white";
+                        this.ctx.textAlign = "center";
+                        this.ctx.textBaseline = "middle";
+                        this.ctx.fillText("...PAUSED...", this.canvas.width / 2, this.canvas.height / 2);
+                        this.ctx.restore();
+                    }
                      
                 }
                 if(this.gameState == this.GAME_STATES.GAMEOVER){
@@ -241,7 +254,7 @@
                 this.ctx.translate(this.player.x, this.player.y);
                 this.ctx.rotate(this.angle);
                 this.ctx.translate(-13, -26); 
-                this.player.currentAnimation.updateAnimation();
+                this.player.currentAnimation.updateAnimation(this.dt);
                 this.player.currentAnimation.drawAnimation(this.ctx, 0, 0);  
                 this.ctx.translate(13, 26);
                 if(this.timeLeft>0){       
@@ -410,22 +423,27 @@
 
             },
             
-            Animation: function(image, numFrames, secondsPerFrame, frameWidth, frameHeight){
-                this.image = image;
-                this.numFrames = numFrames;
-                this.spf = secondsPerFrame;
-                this.width = frameWidth;
-                this.height = frameHeight;
-                this.currentFrame = 0;
-                this.animTimer = 0;
-            }
+            //taken from boomshine exercise
+            pauseGame: function(){
+                this.paused = true;
+
+                //stop the animation loop
+                cancelAnimationFrame(this.animationID);
+
+                //call update() once so that our pause screen gets drawn
+                this.update();
+            },
             
-        }
-		
-		window.onload = function(){
-            console.log("window.onload called");
-            //app.main.animation = app.animation;
-            app.main.init();
+            //taken from boomshine exercise
+            resumeGame: function(){
+                //stop animation loop
+                cancelAnimationFrame(this.animationID);
+
+                this.paused = false;
+
+                //restart the loop
+                this.update();
+            }
         }
 	</script>
 </head>
@@ -437,6 +455,7 @@
     <canvas id="canvas" width="1024" height="768"><canvas>  
 	<script src='animation.js'></script>
     <script src='utilities.js'></script>
+    <script src='loader.js'></script>
     
     <footer>
         <p>Joel Petritsch, Stephen Callen | 2018</p>        
