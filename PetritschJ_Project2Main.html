@@ -61,15 +61,17 @@
 
 		app.main = {
             animation: undefined, //required: loaded by this script
+            sound:undefined,
             canvas: undefined,
             ctx: undefined,     
             timeLeft: 0,
             lastTime: 0, //used by calculateDeltaTime
-            dt: 0,
+            dt: 0,            
             angle: 0,
             swordAngle: undefined,
             animationID: 0,
             paused: false,
+            isPlayingMusic: false,
             player: {
                 x:100,
                 y:100,
@@ -101,6 +103,7 @@
                 y:undefined
             },
             
+            
             doMouseMove: function(e){        
                 this.mouse.x = e.pageX - e.target.offsetLeft;
                 this.mouse.y = e.pageY - e.target.offsetTop;
@@ -120,10 +123,12 @@
                 
                 
             },
+             //Taken from w3Schools
+          
             init: function(){
                 // set up canvas stuff
                 this.canvas = document.querySelector('canvas');
-                this.ctx = this.canvas.getContext("2d");
+                this.ctx = this.canvas.getContext("2d");              
                 
                 this.ctx.mozImageSmoothingEnabled = false;
                 this.ctx.webkitImageSmoothingEnabled = false;
@@ -137,10 +142,14 @@
                 this.player.animations.push(walkAnim);
                 this.player.currentAnimation = this.player.animations[0];
                 
+                this.bgAudio = document.querySelector("#bgAudio");
+                this.bgAudio.volume =0.25;
+                
                 this.gameState = this.GAME_STATES.TITLE;
                 
                 this.canvas.onmousemove = this.doMouseMove.bind(this);
                 this.canvas.onmousedown = this.doMouseDown.bind(this);
+               
                 
                 // start animation loop
                 this.update();
@@ -151,11 +160,13 @@
             update: function() { 
                 // this schedules a call to the update() method in 1/60 seconds
                 this.dt = calculateDeltaTime();
-
+                this.ctx.fillStyle = "green";
                 this.ctx.fillRect(0,0,1024,768);
                 
                 //big state machine checker
                 if(this.gameState == this.GAME_STATES.TITLE){
+                    
+                    this.player.score = 0;
                     this.ctx.save();
                     this.ctx.font = "30px Verdana";
                     this.ctx.fillStyle = "white";
@@ -168,10 +179,17 @@
                     this.enemies = [];
                 }
                 if(this.gameState == this.GAME_STATES.GAME){
+                   
                     if(!this.paused){
                         this.movePlayer();
                         this.updateEnemies();
-                    }
+                        this.isPlayingMusic = false;                        
+                        if(!this.isPlayingMusic){
+                            this.sound.playBGAudio();
+                            this.isPlayingMusic = true;
+                        }
+                    }                
+                    
                     else {
                         this.ctx.save();
                         this.ctx.font = "30px Verdana";
@@ -192,6 +210,8 @@
                     this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2);
                     this.ctx.fillText("click to retry", this.canvas.width / 2, this.canvas.height / 2 + 30);
                     this.ctx.restore();
+                    this.isPlayingMusic = false;
+                    this.sound.stopBGAudio();
                 }
                 //THIS IS THE UPDATE METHOD. IMPORTANT
                 this.animationID = requestAnimationFrame(this.update.bind(this));
@@ -207,6 +227,7 @@
                 this.player.moving = false;
                 //console.log(this.player.state);
                 if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move
+                    
 
                     this.movementVector.x = this.mouse.x - this.player.x;
                     this.movementVector.y = this.mouse.y - this.player.y;
@@ -226,6 +247,7 @@
                     }                
                 }
                 else if(this.player.state == 1){//OOF
+                 
                     this.player.OOFtimer -= this.dt;
                     if (this.player.OOFtimer <= 0){
                         this.player.state = 0;
@@ -234,6 +256,7 @@
                 }
                 else if(this.player.state !=0){//DED
                     this.gameState = this.GAME_STATES.GAMEOVER;
+                    
                 }
                 else{//otherwise, just swing the weapon.
                 this.timeLeft-= this.dt;
@@ -345,7 +368,7 @@
                             break;
                     }
 
-                    Determinator = Math.random()*3;//Determine enemy Type
+                    Determinator = Math.random()*4;//Determine enemy Type
                     Determinator = Math.trunc(Determinator);
                     switch(Determinator){ //Switch between sprites                 
                         case 1:                       
@@ -402,7 +425,11 @@
                                    break;
                            }
                         if(enemyAngle.magnitude < 20){
-                            if(this.enemies[i].type == 0){
+                            if(this.enemies[i].type == 0){// OOF
+                                if(this.player.state != 1){
+                                    this.sound.playEffect();
+                                    console.log("just hit")
+                                }
                                 this.player.state= 1;
                                 this.player.OOFtimer = .5;
                             }
@@ -477,7 +504,7 @@
 
                 //restart the loop
                 this.update();
-            }
+            },         
         }
 	</script>
 </head>
@@ -487,11 +514,15 @@
     <img src="RedBoi.png" id="RedBlob">
     <img src="BluBoi.png" id="BluBlob">
     <img src="arrow.png" id="arrow">
+     <section id="audioControls">
+	   <audio id="bgAudio" src="media/GyrussMainTheme.mp3" controls loop display = none></audio>
+	   
+    </section>
     <canvas id="canvas" width="1024" height="768"><canvas>  
 	<script src='animation.js'></script>
     <script src='utilities.js'></script>
     <script src='loader.js'></script>
-    
+    <script src ='sound.js'></script>
     <footer>
         <p>Joel Petritsch, Stephen Callen | 2018</p>        
     </footer>
