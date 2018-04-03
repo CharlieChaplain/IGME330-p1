@@ -318,7 +318,8 @@
                 this.ctx.beginPath();            
                 this.ctx.strokeStyle = "red";
                 this.ctx.moveTo(0,0);
-                this.ctx.lineTo(0,100);
+                var swordImg = document.getElementById("sword");                
+                this.ctx.drawImage(sword,0,0);
                 this.ctx.stroke();
                 this.ctx.restore();
 
@@ -514,6 +515,7 @@
     <img src="RedBoi.png" id="RedBlob">
     <img src="BluBoi.png" id="BluBlob">
     <img src="arrow.png" id="arrow">
+    <img src ="Sword.png" id="sword">
      <section id="audioControls">
 	   <audio id="bgAudio" src="media/GyrussMainTheme.mp3" controls loop display = none></audio>
 	   
