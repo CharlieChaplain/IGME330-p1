@@ -90,6 +90,7 @@
                 state: 0,
                 OOFtimer: 0,
                 moving: false,
+                dashing: false,
                 facingLeft: true
             },
             GAME_STATES: Object.freeze({
@@ -171,7 +172,8 @@
                 
                 //big state machine checker
                 if(this.gameState == this.GAME_STATES.TITLE){
-                    
+                    this.player.OOFtimer =0;
+                    this.timeLeft = 0;
                     this.player.score = 0;
                     this.ctx.save();
                     this.ctx.font = "30px Verdana";
@@ -232,8 +234,7 @@
             movePlayer: function(){     
                 this.player.moving = false;
                 //console.log(this.player.state);
-                if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move
-                    
+                if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move                  
 
                     this.movementVector.x = this.mouse.x - this.player.x;
                     this.movementVector.y = this.mouse.y - this.player.y;
@@ -244,11 +245,21 @@
 
 
                     if(Math.abs(this.movementVector.x)> 26){// if we are more than like, 3 pixels away
-                        this.player.x = this.player.x + this.dt*this.movementVector.x*300/magnitude;//actually move this.player
+                        if(this.player.dashing){
+                            this.player.x = this.player.x + this.dt*this.movementVector.x*400/magnitude;//actually move this.player
+                        }
+                        else{
+                            this.player.x = this.player.x + this.dt*this.movementVector.x*300/magnitude;//actually move this.player
+                        }
                         this.player.moving = true;
                     }
                     if(Math.abs(this.movementVector.y)> 26){// if we are more than like, 3 pixels away
-                        this.player.y = this.player.y +  this.dt*this.movementVector.y*300/magnitude;//Move this.player normalized distance
+                        if(this.player.dashing){
+                            this.player.y = this.player.y + this.dt*this.movementVector.y*400/magnitude;//actually move this.player
+                        }
+                        else{
+                            this.player.y = this.player.y + this.dt*this.movementVector.y*300/magnitude;//actually move this.player
+                        }
                         this.player.moving = true;
                     }                
                 }
