@@ -6,8 +6,7 @@
 var app = app || {};
 
 
-window.onload = function(){
-	console.log("window.onload called");
+window.onload = function(){	
     app.main.animation = app.animation;
     app.sound.init();
     app.main.sound= app.sound;
@@ -15,12 +14,10 @@ window.onload = function(){
     app.main.init();
 }
 
-window.onblur = function(){
-    console.log("blur at " + Date());
+window.onblur = function(){    
     app.main.pauseGame();
 }
 
-window.onfocus = function(){
-    console.log("focus at " + Date());
+window.onfocus = function(){   
     app.main.resumeGame();
 }

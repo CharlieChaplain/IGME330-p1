@@ -17,12 +17,12 @@ app.keys = (function(){
 	"KEY_SHIFT": 16
 });
     myKeys.keydown = [];
-    console.log("Key Daemon Prepared and ready to key input.");
+    
 	
 
 // event listeners
 window.addEventListener("keydown",function(e){
-	console.log("keydown=" + e.keyCode);
+	
 	myKeys.keydown[e.keyCode] = true;
     if (e.keyCode == 27 || e.keyCode == 80){//ESC/ P
         if (app.main.paused){            
@@ -41,7 +41,6 @@ window.addEventListener("keydown",function(e){
 });
 	
 window.addEventListener("keyup",function(e){
-	console.log("keyup=" + e.keyCode);
 	
 	
 	// pausing and resuming

@@ -191,7 +191,7 @@
                 
                 
             },
-             //Taken from w3Schools
+            
           
             init: function(){
                 // set up canvas stuff
@@ -356,7 +356,7 @@
             },
             movePlayer: function(){     
                 this.player.moving = false;
-                //console.log(this.player.state);
+                
                 if(this.timeLeft ==0 && this.player.state == 0){//if we can move, move                  
 
                     this.movementVector.x = this.mouse.x - this.player.x;
@@ -605,8 +605,7 @@
                                     score : this.enemies[i].type+1,
                                     time: 2
                                 }
-                                this.particles.push(particle);
-                                console.log(this.player.x, this.player.y);
+                                this.particles.push(particle);                               
                             }
                         }
                         else if (this.player.tempScore> 0){//when our swing is done
