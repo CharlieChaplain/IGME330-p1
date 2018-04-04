@@ -132,23 +132,24 @@
             animationID: 0,
             paused: false,
             isPlayingMusic: false,
-            player: {
-                x:100,
-                y:100,
-                img: undefined,
-                animations: [],            
-                currentAnimation: undefined,
-                score:0,
-                tempScore:0,
-                comboMulti:0,
-                state: 0,
-                OOFtimer: 0,
-                DEDtimer: 0,
-                moving: false,
-                dashing: false,
-                stationary: false,
-                facingLeft: true
+            Player: function(){
+                this.x=100;
+                this.y=100;
+                this.img= undefined;
+                this.animations= [];            
+                this.currentAnimation= undefined;
+                this.score=0;
+                this.tempScore=0;
+                this.comboMulti=0;
+                this.state= 0;
+                this.OOFtimer= 0;
+                this.DEDtimer= 0;
+                this.moving= false;
+                this.dashing= false;
+                this.stationary= false;
+                this.facingLeft= true;
             },
+            player: undefined,
             GAME_STATES: Object.freeze({
                 TITLE: 0,
                 INSTRUCTIONS: 1,
@@ -202,7 +203,7 @@
                 this.ctx.webkitImageSmoothingEnabled = false;
                 this.ctx.msImageSmoothingEnabled = false;
                 this.ctx.imageSmoothingEnabled = false;
-                
+                this.player = new this.Player();
                 this.player.img = document.getElementById("player");
                 var walkAnim = new this.animation.Animation(this.player.img, 6, 0.05, 30, 30, 1, 2, true);
                 var idleAnim = new this.animation.Animation(this.player.img, 1, 0.05, 30, 30, 0, 2, true);
@@ -340,8 +341,6 @@
                     this.sound.stopBGAudio();
                 }
                 //THIS IS THE UPDATE METHOD. IMPORTANT
-              
-                
                 this.animationID = requestAnimationFrame(this.update.bind(this));
               
                 
