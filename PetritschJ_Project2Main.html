@@ -89,6 +89,7 @@
                 comboMulti:0,
                 state: 0,
                 OOFtimer: 0,
+                DEDtimer: 0,
                 moving: false,
                 dashing: false,
                 facingLeft: true
@@ -143,10 +144,12 @@
                 this.ctx.imageSmoothingEnabled = false;
                 
                 this.player.img = document.getElementById("player");
-                var walkAnim = new this.animation.Animation(this.player.img, 6, 0.05, 30, 30, 1, 2);
-                var idleAnim = new this.animation.Animation(this.player.img, 1, 0.05, 30, 30, 0, 2);
+                var walkAnim = new this.animation.Animation(this.player.img, 6, 0.05, 30, 30, 1, 2, true);
+                var idleAnim = new this.animation.Animation(this.player.img, 1, 0.05, 30, 30, 0, 2, true);
+                var fallAnim = new this.animation.Animation(this.player.img, 4, 0.05, 30, 30, 7, 2, false);
                 this.player.animations.push(idleAnim);
                 this.player.animations.push(walkAnim);
+                this.player.animations.push(fallAnim);
                 this.player.currentAnimation = this.player.animations[0];
                 
                 this.bgAudio = document.querySelector("#bgAudio");
@@ -172,7 +175,8 @@
                 
                 //big state machine checker
                 if(this.gameState == this.GAME_STATES.TITLE){
-                    this.player.OOFtimer =0;
+                    this.player.OOFtimer = 0;
+                    this.player.DEDtimer = 0;
                     this.timeLeft = 0;
                     this.player.score = 0;
                     this.ctx.save();
@@ -271,8 +275,12 @@
                     }
 
                 }
-                else if(this.player.state !=0){//DED
-                    this.gameState = this.GAME_STATES.GAMEOVER;
+                else if(this.player.state == 2){//DED
+                    //this.player.state = 2;
+                    this.player.DEDtimer -= this.dt;
+                    if (this.player.DEDtimer <= 0){
+                        this.gameState = this.GAME_STATES.GAMEOVER;
+                    }
                     
                 }
                 else{//otherwise, just swing the weapon.
@@ -404,8 +412,7 @@
 
                     this.enemies.push(temp);
                 }
-
-
+                
                 for(var i =0; i < maxEnemies; i++){
                     if(this.enemies[i].x < 0 || this.enemies[i].x > 1024 || this.enemies[i].y < 0 || this.enemies[i].y > 768){//if we go off screen, delete this next frame
                        this.toRemoveArray.unshift(i);
@@ -452,8 +459,12 @@
                                 this.player.OOFtimer = .5;
                             }
                             else{
-                                this.player.state=2;//DED
+                                if(this.player.state != 2){
+                                    this.player.state=2;//DED
+                                    this.player.DEDtimer = 1.0;
+                                }
                             }
+                            this.toRemoveArray.unshift(i);
                         }
 
 
@@ -499,6 +510,10 @@
                     else{
                         this.player.currentAnimation = this.player.animations[0]; //idle anim
                     }
+                }
+                //player falls down in OOF and DED states
+                else if(this.player.state == 1 || this.player.state == 2){
+                    this.player.currentAnimation = this.player.animations[2]; //fall anim
                 }
             },
             
