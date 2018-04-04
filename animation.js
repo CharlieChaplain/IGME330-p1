@@ -23,8 +23,12 @@ app.animation = (function(){
             //this if will progress the animation or go back to the beginning if it's reached the end
             if(this.currentFrame >= this.numFrames - 1){
                 //this if will prevent the animation from looping if loop is false
-                if(this.loop) this.currentFrame = 0;
-                else this.currentFrame = this.numFrames - 1;
+                if(this.loop){
+                    this.currentFrame = 0;
+                }
+                else{
+                    this.currentFrame = this.numFrames - 1;
+                }
             }
             else{
                 this.currentFrame++;

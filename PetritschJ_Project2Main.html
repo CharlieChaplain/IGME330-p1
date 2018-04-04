@@ -149,7 +149,7 @@
                 this.player.img = document.getElementById("player");
                 var walkAnim = new this.animation.Animation(this.player.img, 6, 0.05, 30, 30, 1, 2, true);
                 var idleAnim = new this.animation.Animation(this.player.img, 1, 0.05, 30, 30, 0, 2, true);
-                var fallAnim = new this.animation.Animation(this.player.img, 4, 0.05, 30, 30, 7, 2, false);
+                var fallAnim = new this.animation.Animation(this.player.img, 4, 0.075, 30, 30, 7, 2, false);
                 this.player.animations.push(idleAnim);
                 this.player.animations.push(walkAnim);
                 this.player.animations.push(fallAnim);
@@ -173,8 +173,8 @@
             update: function() { 
                 // this schedules a call to the update() method in 1/60 seconds
                 this.dt = calculateDeltaTime();
-                this.ctx.fillStyle = "green";
-                this.ctx.fillRect(0,0,1024,768);
+                var mapImg = document.getElementById("map");
+                this.ctx.drawImage(mapImg,0,0,512,384,0,0,1024,768);
                 
                 //big state machine checker
                 if(this.gameState == this.GAME_STATES.TITLE){
@@ -348,17 +348,14 @@
 
                     this.ctx.rotate(((-1+this.timeLeft) * Math.PI));               
                 }
-                this.ctx.beginPath();            
-                this.ctx.strokeStyle = "red";
-                this.ctx.moveTo(0,0);
-                var swordImg = document.getElementById("sword");                
-                this.ctx.drawImage(sword,0,0);
-                this.ctx.stroke();
+                
+                var swordImg = document.getElementById("sword");
+                this.ctx.drawImage(sword,0,0,9,50,-9,0,18,100);
                 this.ctx.restore();
 
             },
             updateEnemies: function(){
-
+                //this determines how many enemies spawn. It's a function of the player's score
                 var maxEnemies =Math.min( Math.max(Math.sqrt(this.player.score), 3), 7);            
                 while(this.enemies.length < maxEnemies){
                     var temp ={
@@ -366,11 +363,15 @@
                         y : Math.random() * 768,
                         DeltaX : (Math.random()-.5) * 600,
                         DeltaY : (Math.random()-.5) * 600, 
-                        img : document.getElementById("Blob"),
+                        img : document.getElementById("GreenSkel"),
                         type : 0,
-                        radius: 16
+                        radius: 16,
+                        facingLeft: true,
+                        animation: undefined
 
                     }
+                    
+                    
                     var Determinator = Math.random()*4;
                     Determinator = Math.trunc(Determinator);// Determine Spawn Location
                     switch(Determinator){
@@ -385,14 +386,14 @@
                             if(temp.DeltaX > 0){
                                 temp.DeltaX *=-1;
                             }
-                            temp.img = document.getElementById("BluBlob")
+                            temp.img = document.getElementById("BlueSkel")
                             break;
                         case 3:
                             temp.y=0;
                              if(temp.DeltaY < 0){
                                 temp.DeltaY*=-1;
                             }
-                             temp.img = document.getElementById("RedBlob")
+                             temp.img = document.getElementById("RedSkel")
                             break;
                         default:
                             if(temp.DeltaY > 0){
@@ -401,27 +402,38 @@
                             temp.y = 768;
                             break;
                     }
-
+                    
                     Determinator = Math.random()*4;//Determine enemy Type
                     Determinator = Math.trunc(Determinator);
                     switch(Determinator){ //Switch between sprites                 
                         case 1:                       
-                            temp.img = document.getElementById("BluBlob")
+                            temp.img = document.getElementById("BlueSkel")
                             temp.type = 1;
                             break;
                         case 2:
-                            temp.img = document.getElementById("RedBlob")
+                            temp.img = document.getElementById("RedSkel")
                             temp.type = 2;
                             break;
                         default:
-                            temp.img = document.getElementById("Blob")
+                            temp.img = document.getElementById("GreenSkel")
                             temp.type = 0;
                             break;
                     }
+                    //sets up the animation
+                    temp.animation = new this.animation.Animation(temp.img,4,0.05,18,18,0,2,true);
+                    
                     this.enemies.push(temp);
                 }
                 
                 for(var i =0; i < maxEnemies; i++){
+                    //checks if enemy is facing left
+                    if(this.enemies[i].DeltaX >= 0){
+                        this.enemies[i].facingLeft = false;
+                    }
+                    else if(this.enemies[i].DeltaX < 0){
+                        this.enemies[i].facingLeft = true;
+                    }
+                    
                     if(this.enemies[i].x < 0 || this.enemies[i].x > 1024 || this.enemies[i].y < 0 || this.enemies[i].y > 768){//if we go off screen, delete this next frame
                        this.toRemoveArray.unshift(i);
                     }
@@ -459,11 +471,13 @@
                                 }
                                 this.player.state= 1;
                                 this.player.OOFtimer = .5;
+                                this.player.animations[2].currentFrame = 0; //this resets the falling animation
                             }
                             else{
                                 if(this.player.state != 2){
                                     this.player.state=2;//DED
                                     this.player.DEDtimer = 1.0;
+                                    this.player.animations[2].currentFrame = 0; //this resets the falling animation
                                 }
                             }
                             this.toRemoveArray.unshift(i);
@@ -494,8 +508,25 @@
                         this.enemies[i].y += this.enemies[i].DeltaY*this.dt;
                     }
                     this.ctx.save();
-                    this.ctx.translate(-19,-17)
-                    this.ctx.drawImage(this.enemies[i].img, this.enemies[i].x, this.enemies[i].y)
+                    //translates so the enemy location is in the center of the image drawn
+                    this.ctx.translate(-18,-18);
+                    //translates so the drawing can be done at the "origin"
+                    this.ctx.translate(this.enemies[i].x, this.enemies[i].y);
+                    
+                    //updates and draws animation
+                    this.enemies[i].animation.updateAnimation(this.dt);
+                    if(!this.enemies[i].facingLeft){
+                        this.ctx.save();
+                        this.ctx.scale(-1, 1);
+                        this.ctx.translate(-36, 0); //accounts for the change in x from flipping the image
+                        this.enemies[i].animation.drawAnimation(this.ctx, 0, 0);
+                        this.ctx.restore();
+                    }
+                    else{
+                        this.enemies[i].animation.drawAnimation(this.ctx, 0, 0);
+                    }
+                    
+                    
                     this.ctx.restore();
                 }               
                 while(this.toRemoveArray.length > 0){
@@ -581,17 +612,18 @@
 	</script>
 </head>
 <body>
+    <canvas id="canvas" width="1024" height="768"><canvas>
     <img src="CharacterV3.png" id="player">
-    <img src="AngeryBoi.png" id="Blob">
-    <img src="RedBoi.png" id="RedBlob">
-    <img src="BluBoi.png" id="BluBlob">
+    <img src="AngeryBoiV2_Green.png" id="GreenSkel">
+    <img src="AngeryBoiV2_Red.png" id="RedSkel">
+    <img src="AngeryBoiV2_Blue.png" id="BlueSkel">
     <img src="arrow.png" id="arrow">
-    <img src ="Sword.png" id="sword">
+    <img src ="SwordV2.png" id="sword">
+    <img src ="map.png" id="map">
      <section id="audioControls">
 	   <audio id="bgAudio" src="media/GyrussMainTheme.mp3" controls loop display = none></audio>
 	   
     </section>
-    <canvas id="canvas" width="1024" height="768"><canvas>  
 	<script src='animation.js'></script>
     <script src='utilities.js'></script>
     <script src='loader.js'></script>
