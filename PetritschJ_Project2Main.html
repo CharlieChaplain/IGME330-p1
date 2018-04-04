@@ -5,13 +5,32 @@
 	<meta charset="utf-8" />
 	<title>Amorphious++</title>
 	<style>
+        @font-face{
+            font-family: 'Deutsch';
+            src: url(Fonts/Deutsch-webfont.ttf);
+        }
+        @font-face{
+            font-family: 'HansaGotisch';
+            src: url(Fonts/HansaGotisch.ttf);
+        }
+        @font-face{
+            font-family: 'BitGothic';
+            src: url(Fonts/bitmgothic.medium.ttf);
+        }
+        @font-face{
+            font-family: 'BitSerif';
+            src: url(Fonts/serif-pixel-7.regular.ttf);
+        }
+        @font-face{
+            font-family: 'Lansbury';
+            src: url(Fonts/lansbury-fg.regular.ttf);
+        }
         body {
             background: #000;
-            font-family: tahoma, verdana, sans serif;
             margin: 0;
             color: #aab;
         }
-        this.canvas {
+        canvas {
             margin: auto;
             margin-top: 20px;
             margin-bottom: 20px;
@@ -22,41 +41,74 @@
             border-width: 15px;
             border-style: solid;
             box-shadow: 5px 5px 8px #112 inset;
-            border-radius: 20px;
         }        
         h1{
-            font-family: recharge;
+            font-size: 80pt;
+            margin-top: 10px;
+            padding: 0;
+            margin-bottom: 0px;
+            color: #ac3232;
+            font-weight: normal;
+        } 
+        h3{
             font-size: 50pt;
-            text-shadow: 2px 2px 1px #112, -2px -2px 1px #eef;
-            
+            margin-bottom: 0px;
+            padding-bottom: 0px;
+            font-weight: normal;
         } 
         hr{
             clear:both;
         }
         footer{
-            padding: 20px;
+            padding: 0px;
             margin: 20px;
             color: #556;
             background: #bbc;
             text-align: center;
-            font-family: nasalization;
+            font-family: Lansbury;
             border-color: #556;
             border-width: 15px;
             border-style: solid;
-            font-size: 20pt;
+            font-size: 40pt;
             clear: both;
             box-shadow: 5px 5px 8px #112 inset;
-            border-radius: 20px;
             text-shadow: 1px 1px 1px #112, -1px -1px 1px #eef;
         }
         img{
-            visibility:hidden;
+            
+            display:none;
+        }
+        p{
+            font-size: 30pt;
         }
         #audioControls{
             display: none;
         }
-     
-      
+        
+        #deutsch{
+            font-family: Deutsch;
+        }
+        #hansa{
+            font-family: HansaGotisch;
+        }
+        #bitgoth{
+            font-family: BitGothic;
+        }
+        #bitserif{
+            font-family: BitSerif;
+        }
+        #lansbury{
+            font-family: Lansbury;
+        }
+        
+        .hidden{
+            display: none;
+        }
+        .sixty{
+            width: 60%;
+            display:block;
+            margin:auto;
+        }
         
 	</style>
 	<script>
@@ -76,6 +128,7 @@
             dt: 0,            
             angle: 0,
             swordAngle: undefined,
+            titleAnim: undefined,
             animationID: 0,
             paused: false,
             isPlayingMusic: false,
@@ -98,8 +151,9 @@
             },
             GAME_STATES: Object.freeze({
                 TITLE: 0,
-                GAME: 1,
-                GAMEOVER: 2
+                INSTRUCTIONS: 1,
+                GAME: 2,
+                GAMEOVER: 3
             }),
             gameState: undefined,
             toRemoveArray: [],
@@ -121,6 +175,9 @@
             },
             doMouseDown: function(e){ 
                 if(this.gameState == this.GAME_STATES.TITLE){
+                    this.gameState = this.GAME_STATES.INSTRUCTIONS;
+                }
+                else if(this.gameState == this.GAME_STATES.INSTRUCTIONS){
                     this.gameState = this.GAME_STATES.GAME;
                 }
                 else if(this.gameState == this.GAME_STATES.GAME){
@@ -155,6 +212,9 @@
                 this.player.animations.push(fallAnim);
                 this.player.currentAnimation = this.player.animations[0];
                 
+                var titleImg = document.getElementById("title");
+                this.titleAnim = new this.animation.Animation(titleImg, 6, 0.1, 400, 100, 0, 2, true);
+                
                 this.bgAudio = document.querySelector("#bgAudio");
                 this.bgAudio.volume =0.25;
                 
@@ -182,16 +242,52 @@
                     this.player.DEDtimer = 0;
                     this.timeLeft = 0;
                     this.player.score = 0;
+                    //draws a dark transparent square across canvas
+                    this.ctx.globalAlpha = 0.75;
+                    this.ctx.fillStyle = "black";
+                    this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+                    this.ctx.globalAlpha = 1.0;
+                    
+                    this.titleAnim.updateAnimation(this.dt);
+                    this.titleAnim.drawAnimation(this.ctx, 100,200);
+                    
                     this.ctx.save();
-                    this.ctx.font = "30px Verdana";
+                    this.ctx.font = "50px BitGothic";
                     this.ctx.fillStyle = "white";
                     this.ctx.textAlign = "center";
                     this.ctx.textBaseline = "middle";
-                    this.ctx.fillText("CLICK TO START", this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.fillText("Click to Start", this.canvas.width / 2, this.canvas.height / 2 + 80);
                     this.ctx.restore();
                     //resets the game
                     this.player.state = 0;
                     this.enemies = [];
+                }
+                if(this.gameState == this.GAME_STATES.INSTRUCTIONS){
+                    //draws a dark transparent square across canvas
+                    this.ctx.globalAlpha = 0.75;
+                    this.ctx.fillStyle = "black";
+                    this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+                    this.ctx.globalAlpha = 1.0;
+                    
+                    this.ctx.font = "70px BitGothic";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.textAlign = "left";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText("Instructions", 100, 150);
+                    
+                    this.ctx.font = "20px BitSerif";
+                    this.ctx.fillText("Smite your enemies with the Holy sword of Antioch!", 100, 300);
+                    this.ctx.fillText("Your hero follows your cursor and will swing his", 100, 360);
+                    this.ctx.fillText("sword when you click. Be careful, the sword is", 100, 390);
+                    this.ctx.fillText("heavy with smiting power and therefore swings slowly!", 100, 420);
+                    this.ctx.fillText("P or Esc to pause", 100, 480);
+                    this.ctx.fillText("Hold shift to sprint", 100, 510);
+                    
+                    this.ctx.font = "50px BitGothic";
+                    this.ctx.fillStyle = "white";
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText("Click to Start", this.canvas.width / 2, this.canvas.height / 2 + 300);
                 }
                 if(this.gameState == this.GAME_STATES.GAME){
                    
@@ -207,23 +303,36 @@
                     }                
                     
                     else {
+                        //draws a dark transparent square across canvas
+                        this.ctx.globalAlpha = 0.75;
+                        this.ctx.fillStyle = "black";
+                        this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+                        this.ctx.globalAlpha = 1.0;
+                        
                         this.ctx.save();
-                        this.ctx.font = "30px Verdana";
+                        this.ctx.font = "70px BitGothic";
                         this.ctx.fillStyle = "white";
                         this.ctx.textAlign = "center";
                         this.ctx.textBaseline = "middle";
-                        this.ctx.fillText("...PAUSED...", this.canvas.width / 2, this.canvas.height / 2);
+                        this.ctx.fillText("Paused", this.canvas.width / 2, this.canvas.height / 2);
                         this.ctx.restore();
                     }
                      
                 }
                 if(this.gameState == this.GAME_STATES.GAMEOVER){
+                    //draws a dark transparent square across canvas
+                    this.ctx.globalAlpha = 0.75;
+                    this.ctx.fillStyle = "black";
+                    this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+                    this.ctx.globalAlpha = 1.0;
+
                     this.ctx.save();
-                    this.ctx.font = "30px Verdana";
+                    this.ctx.font = "70px BitGothic";
                     this.ctx.fillStyle = "white";
                     this.ctx.textAlign = "center";
                     this.ctx.textBaseline = "middle";
-                    this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2 - 40);
+                    this.ctx.font = "50px BitGothic";
                     this.ctx.fillText("click to retry", this.canvas.width / 2, this.canvas.height / 2 + 30);
                     this.ctx.restore();
                     this.isPlayingMusic = false;
@@ -236,9 +345,11 @@
               
                 
                 this.ctx.save();
+                this.ctx.textAlign = "center";
+                this.ctx.textBaseline = "middle";
                 this.ctx.fillStyle = "white";
-                this.ctx.font = "24px Verdana";
-                this.ctx.fillText(this.player.score, 850, 750,);
+                this.ctx.font = "70px BitSerif";
+                this.ctx.fillText(this.player.score, 800, 700);
 
                 this.ctx.restore();
                 
@@ -595,7 +706,7 @@
                     this.particles[i].time -= this.dt;                
                     this.ctx.save();
                     this.ctx.fillStyle = "rgba(255,255,255," + this.particles[i].time/2 + ")";
-                    this.ctx.font = "30px Verdana";                    
+                    this.ctx.font = "30px BitSerif";                    
                     this.ctx.fillText(this.particles[i].score, this.particles[i].x, this.particles[i].y);               
                     this.particles[i].y-=1;
                     this.ctx.restore();
@@ -612,23 +723,57 @@
 	</script>
 </head>
 <body>
-    <canvas id="canvas" width="1024" height="768"><canvas>
-    <img src="CharacterV3.png" id="player">
-    <img src="AngeryBoiV2_Green.png" id="GreenSkel">
-    <img src="AngeryBoiV2_Red.png" id="RedSkel">
-    <img src="AngeryBoiV2_Blue.png" id="BlueSkel">
-    <img src="arrow.png" id="arrow">
-    <img src ="SwordV2.png" id="sword">
-    <img src ="map.png" id="map">
+    <canvas id="canvas" width="1024" height="768"></canvas>
+    <p id="deutsch" class="hidden">
+        Deutsch Font
+    </p>
+    <p id="hansa" class="hidden">
+        Hansa Font
+    </p>
+    <p id="bitgoth" class="hidden">
+        BitGothic Font
+    </p>
+    <p id="bitserif" class="hidden">
+        BitSerif Font
+    </p>
+    <p id="lansbury" class="hidden">
+        Lansbury Font
+    </p>
+    <img src="Graphics/CharacterV3.png" id="player">
+    <img src="Graphics/AngeryBoiV2_Green.png" id="GreenSkel">
+    <img src="Graphics/AngeryBoiV2_Red.png" id="RedSkel">
+    <img src="Graphics/AngeryBoiV2_Blue.png" id="BlueSkel">
+    <img src="Graphics/arrow.png" id="arrow">
+    <img src="Graphics/SwordV2.png" id="sword">
+    <img src="Graphics/map.png" id="map">
+    <img src="Graphics/title.png" id="title">
      <section id="audioControls">
 	   <audio id="bgAudio" src="media/GyrussMainTheme.mp3" controls loop display = none></audio>
 	   
     </section>
-	<script src='animation.js'></script>
-    <script src='utilities.js'></script>
-    <script src='loader.js'></script>
-    <script src ='sound.js'></script>
-    <script src ='keys.js'></script>
+	<script src='JS/animation.js'></script>
+    <script src='JS/utilities.js'></script>
+    <script src='JS/loader.js'></script>
+    <script src='JS/sound.js'></script>
+    <script src='JS/keys.js'></script>
+    
+    <!--Actual page content now-->
+    <div class="sixty">
+        <h3 id="hansa">Welcome to </h3>
+        <h1 id="deutsch">Amorphous<span id="bitserif">++</span></h1>
+        <hr>
+        <p id="lansbury" font-size = 20pt>You are Sir Marcus of the Holy Order of Antioch. You have been sent by the Order to the Cave of Beasts to smite all of the evil that resides within. Armed with your trusty blade, the Holy Sword of Antioch, your job is to destroy as many minions of the dead as you can before you succumb to their vile claws!
+        </p>
+        
+        <h3 id="hansa">Controls:</h3>
+        <hr>
+        <p id="lansbury" font-size = 20pt>
+        Sir Marcus follows your cursor. Clicking will swing his sword.<br/>
+        Press P or Esc to pause<br/>
+        Hold shift to sprint
+        </p>
+    </div>
+    
     <footer>
         <p>Joel Petritsch, Stephen Callen | 2018</p>        
     </footer>
