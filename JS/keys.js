@@ -14,7 +14,8 @@ app.keys = (function(){
 	"KEY_RIGHT": 39, 
 	"KEY_DOWN": 40,
 	"KEY_SPACE": 32,
-	"KEY_SHIFT": 16
+	"KEY_SHIFT": 16,
+    "KEY_F": 70
 });
     myKeys.keydown = [];
     
@@ -36,6 +37,9 @@ window.addEventListener("keydown",function(e){
     }
     if (e.keyCode == 32){
         app.main.stand();
+    }
+    if (e.keyCode == 70){
+        requestFullscreen(app.main.canvas);
     }
 	
 });
