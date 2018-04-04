@@ -395,8 +395,8 @@
 
                 }
                 else if(this.player.state == 2){//DED
-                    //this.player.state = 2;
-                    this.player.DEDtimer -= this.dt;
+                    
+                    this.player.DEDtimer -= this.dt;//run the animation for death
                     if (this.player.DEDtimer <= 0){
                         this.gameState = this.GAME_STATES.GAMEOVER;
                     }
@@ -577,8 +577,7 @@
                         if(enemyAngle.magnitude < 20){
                             if(this.enemies[i].type == 0){// OOF
                                 if(this.player.state != 1){
-                                    this.sound.playEffect();
-                                    console.log("just hit")
+                                    this.sound.playEffect(false);                                    
                                 }
                                 this.player.state= 1;
                                 this.player.OOFtimer = .5;
@@ -586,6 +585,7 @@
                             }
                             else{
                                 if(this.player.state != 2){
+                                    this.sound.playEffect(true);      
                                     this.player.state=2;//DED
                                     this.player.DEDtimer = 1.0;
                                     this.player.animations[2].currentFrame = 0; //this resets the falling animation
@@ -610,6 +610,13 @@
                             }
                         }
                         else if (this.player.tempScore> 0){//when our swing is done
+                             var particle = {
+                                    x: 800,
+                                    y: 650,
+                                    score : "x" + this.player.comboMulti,
+                                    time: 2
+                                }
+                               this.particles.push(particle);
                             this.player.score += (this.player.tempScore* this.player.comboMulti); 
                             this.player.tempScore= 0;
                             this.player.comboMulti =0;

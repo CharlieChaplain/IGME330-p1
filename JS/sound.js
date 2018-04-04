@@ -22,10 +22,22 @@ app.sound = (function(){
 		bgAudio.currentTime = 0;
 	}
 	
-	function playEffect(){
+	function playEffect(inc){
         var effectSound = document.createElement('audio');
-        effectSound.volume = 0.3;
+         effectSound.volume = 0.3;
+        if(inc == false){        
 		effectSound.src = "media/ProperOOF.mp3";
+        }
+        else{       
+		effectSound.src = "media/DeathOOF.mp3";
+        }
+      
+        effectSound.play();
+		
+	}
+    
+    function playDeathEffect(){
+      
         effectSound.play();
 		
 	}
