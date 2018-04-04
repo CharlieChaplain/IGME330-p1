@@ -104,6 +104,7 @@
             gameState: undefined,
             toRemoveArray: [],
             enemies: [],
+            particles:[],
             mouse: {
                 x:undefined,
                 y:undefined
@@ -197,6 +198,7 @@
                     if(!this.paused){
                         this.movePlayer();
                         this.updateEnemies();
+                        this.updateParticles();
                         this.isPlayingMusic = false;                        
                         if(!this.isPlayingMusic){
                             this.sound.playBGAudio();
@@ -228,7 +230,10 @@
                     this.sound.stopBGAudio();
                 }
                 //THIS IS THE UPDATE METHOD. IMPORTANT
+              
+                
                 this.animationID = requestAnimationFrame(this.update.bind(this));
+              
                 
                 this.ctx.save();
                 this.ctx.fillStyle = "white";
@@ -236,6 +241,7 @@
                 this.ctx.fillText(this.player.score, 850, 750,);
 
                 this.ctx.restore();
+                
             },
             movePlayer: function(){     
                 this.player.moving = false;
@@ -408,10 +414,10 @@
                             temp.type = 2;
                             break;
                         default:
+                            temp.img = document.getElementById("Blob")
                             temp.type = 0;
                             break;
                     }
-
                     this.enemies.push(temp);
                 }
                 
@@ -428,27 +434,21 @@
                         if(enemyAngle.angle < 0){//edit angle for matchmaking
                             enemyAngle.angle += Math.PI*2                    
                         }
-
-
+                        
                          switch(this.enemies[i].type){
-                               case 1:                          
-
+                               case 1: 
                                     var myAngle=0, deltaAngle=0;                                
-                                    deltaAngle = (enemyAngle.angle - myAngle);  
-
+                                    deltaAngle = (enemyAngle.angle - myAngle); 
                                     enemyAngle.angle = myAngle + deltaAngle;                                 
                                     this.enemies[i].DeltaX = Math.cos(enemyAngle.angle)*150;
                                     this.enemies[i].DeltaY = Math.sin(enemyAngle.angle)*150;
-
                                     if(enemyAngle.angle < 0){//edit angle for matchmaking
                                         enemyAngle.angle += Math.PI*2                    
                                     }
                                     break;
                                case 2:
-
                                    break;
                                default:
-
                                    break;
                            }
                         if(enemyAngle.magnitude < 20){
@@ -468,25 +468,27 @@
                             }
                             this.toRemoveArray.unshift(i);
                         }
-
-
-
-
                         if( this.timeLeft > 0){//if we are swinging
                             var anglediff = Math.abs(enemyAngle.angle - this.swordAngle) * 180/Math.PI;
                             if(( anglediff < 10) && (enemyAngle.magnitude < 120)){//collision check
                                 this.toRemoveArray.unshift(i);
-                                this.player.tempScore+=this.enemies[i].type;
+                                this.player.tempScore+=this.enemies[i].type+1;
                                 this.player.comboMulti+=1;
+                                var particle = {
+                                    x: this.enemies[i].x,
+                                    y: this.enemies[i].y,
+                                    score : this.enemies[i].type+1,
+                                    time: 2
+                                }
+                                this.particles.push(particle);
+                                console.log(this.player.x, this.player.y);
                             }
                         }
                         else if (this.player.tempScore> 0){//when our swing is done
-                            this.player.score += (this.player.tempScore* this.player.comboMulti);
-                            //console.log(this.player.tempScore + " * " + this.player.comboMulti);   
+                            this.player.score += (this.player.tempScore* this.player.comboMulti); 
                             this.player.tempScore= 0;
-                            //console.log(this.player.score);
                             this.player.comboMulti =0;
-
+                            
                         }
                         this.enemies[i].x += this.enemies[i].DeltaX*this.dt;
                         this.enemies[i].y += this.enemies[i].DeltaY*this.dt;
@@ -500,8 +502,6 @@
                     this.enemies.splice(this.toRemoveArray[0], 1);
                     this.toRemoveArray.splice(0,1);
                 }
-
-
             },
             
             checkPlayerAnimation: function(){
@@ -522,13 +522,11 @@
             sprint: function(){
                 this.player.dashing = true;
                 this.player.stationary = false;
-                console.log("Jaghatia Khan");
             },
             
             walk: function(){
                 this.player.dashing = false;
-                this.player.stationary = false;
-                 console.log("standard walk");
+                this.player.stationary = false;                
             },
             
             stand : function(){
@@ -557,7 +555,28 @@
 
                 //restart the loop
                 this.update();
-            },         
+            },     
+            
+            updateParticles(){//Draw particles until there are none left
+                
+                var toDelete =false;
+                for(var i=0; i< this.particles.length; i++){
+                    this.particles[i].time -= this.dt;                
+                    this.ctx.save();
+                    this.ctx.fillStyle = "rgba(255,255,255," + this.particles[i].time/2 + ")";
+                    this.ctx.font = "30px Verdana";                    
+                    this.ctx.fillText(this.particles[i].score, this.particles[i].x, this.particles[i].y);               
+                    this.particles[i].y-=1;
+                    this.ctx.restore();
+                    if(this.particles[i].time <=0){
+                    toDelete = true;                
+                    }                  
+                }
+            if(toDelete){
+                this.particles.splice(0,1);
+                
+            }
+        }
         }
 	</script>
 </head>
