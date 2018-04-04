@@ -11,6 +11,7 @@ window.onload = function(){
     app.main.animation = app.animation;
     app.sound.init();
     app.main.sound= app.sound;
+    app.main.keys = app.keys;
     app.main.init();
 }
 

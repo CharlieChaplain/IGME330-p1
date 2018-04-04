@@ -69,6 +69,7 @@
             animation: undefined, //required: loaded by this script
             sound:undefined,
             canvas: undefined,
+            keys: undefined,
             ctx: undefined,     
             timeLeft: 0,
             lastTime: 0, //used by calculateDeltaTime
@@ -92,6 +93,7 @@
                 DEDtimer: 0,
                 moving: false,
                 dashing: false,
+                stationary: false,
                 facingLeft: true
             },
             GAME_STATES: Object.freeze({
@@ -249,23 +251,23 @@
 
 
                     if(Math.abs(this.movementVector.x)> 26){// if we are more than like, 3 pixels away
-                        if(this.player.dashing){
-                            this.player.x = this.player.x + this.dt*this.movementVector.x*400/magnitude;//actually move this.player
+                        if(this.player.dashing){//sprint
+                            this.player.x = this.player.x + this.dt*this.movementVector.x*350/magnitude;//actually move this.player
                         }
-                        else{
-                            this.player.x = this.player.x + this.dt*this.movementVector.x*300/magnitude;//actually move this.player
+                        else if(!this.player.stationary) {//walk
+                            this.player.x = this.player.x + this.dt*this.movementVector.x*250/magnitude;//actually move this.player
                         }
                         this.player.moving = true;
                     }
                     if(Math.abs(this.movementVector.y)> 26){// if we are more than like, 3 pixels away
-                        if(this.player.dashing){
-                            this.player.y = this.player.y + this.dt*this.movementVector.y*400/magnitude;//actually move this.player
+                        if(this.player.dashing){//sprint
+                            this.player.y = this.player.y + this.dt*this.movementVector.y*350/magnitude;//actually move this.player
                         }
-                        else{
-                            this.player.y = this.player.y + this.dt*this.movementVector.y*300/magnitude;//actually move this.player
+                        else if(!this.player.stationary) {//walk
+                            this.player.y = this.player.y + this.dt*this.movementVector.y*250/magnitude;//actually move this.player
                         }
                         this.player.moving = true;
-                    }                
+                    }                    
                 }
                 else if(this.player.state == 1){//OOF
                  
@@ -328,7 +330,7 @@
                 this.ctx.translate(30, 45);
                 this.ctx.rotate(this.angle);
                 
-                if(this.timeLeft>0){       
+                if(this.timeLeft>0){  //swings sword     
                     this.swordAngle = this.angle + ((-1+this.timeLeft) * Math.PI) ;
                     if(this.swordAngle< 0){
                             this.swordAngle+= Math.PI*2//0 is straight down
@@ -517,6 +519,24 @@
                 }
             },
             
+            sprint: function(){
+                this.player.dashing = true;
+                this.player.stationary = false;
+                console.log("Jaghatia Khan");
+            },
+            
+            walk: function(){
+                this.player.dashing = false;
+                this.player.stationary = false;
+                 console.log("standard walk");
+            },
+            
+            stand : function(){
+                this.player.dashing = false;
+                this.player.stationary = true;
+               
+            },
+            
             //taken from boomshine exercise
             pauseGame: function(){
                 this.paused = true;
@@ -557,6 +577,7 @@
     <script src='utilities.js'></script>
     <script src='loader.js'></script>
     <script src ='sound.js'></script>
+    <script src ='keys.js'></script>
     <footer>
         <p>Joel Petritsch, Stephen Callen | 2018</p>        
     </footer>
